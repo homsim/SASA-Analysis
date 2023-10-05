@@ -1,9 +1,0 @@
-README.md
-setup.py
-sasaanalysis.egg-info/PKG-INFO
-sasaanalysis.egg-info/SOURCES.txt
-sasaanalysis.egg-info/dependency_links.txt
-sasaanalysis.egg-info/requires.txt
-sasaanalysis.egg-info/top_level.txt
-src/__init__.py
-src/sasa_lammps.py
