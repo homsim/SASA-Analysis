@@ -1,3 +1,5 @@
+**Package not yet ready to use! Do not execute `setup.py`!**
+
 # SASA-Analysis
 Analyses interaction energyies between protein/macromolecules and probe atom/molecule at the solvent accessible surface area of the molecule
 Interaction energies are determined by using ReaxFF in the LAMMPS simulation suite.
@@ -30,3 +32,29 @@ Interaction energies are determined by using ReaxFF in the LAMMPS simulation sui
     -  sasa.xyz
     -  NearestNeighbors.txt
     -  data. file
+
+
+
+# ToDo
+
+## General
+
+- [X] Create function(s) to write SASA positions
+- [ ] Write proper `README.md`
+- [ ] Implement as importable package -> How to partition the methods properly?
+- [ ] ~~Write/Finalize `setup.py` and/or `requirements.txt`~~
+- [ ] ~~(Maybe add entry point in `setup.py`)~~
+- [ ] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
+
+## 1-atomic probe
+
+- [X] Check routine to see if all the files are present
+- [X] Write general method for executing LAMMPS
+
+## N_atomic probe
+
+- [ ] Rotation of the molecule in order to get defined interactions
+
+## Analysis
+
+- [ ] Proper output file format with probe position, energy, residue
