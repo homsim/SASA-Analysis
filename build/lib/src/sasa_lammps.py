@@ -9,10 +9,6 @@ from ovito.io import import_file, export_file
 import numpy as np
 import subprocess
 
-# ignore warnings about ovito being installed via PyPi
-import warnings
-warnings.filterwarnings('ignore', message='.*OVITO.*PyPI')
-
 LAMMPS_EXE = '/home/hanna/Programs/lammps-23Jun2022/src/lmp_mpi'
 
 def convert_data_file(path, data_file):
@@ -21,6 +17,7 @@ def convert_data_file(path, data_file):
 
     ### temporary solution
     xyz_file = f"{data_file.split('.')[-1]}.xyz"
+    ###
 
     export_file(pipeline, f'{path}/{xyz_file}', 'xyz',
                columns = ['Particle Type', 
@@ -34,7 +31,7 @@ def convert_data_file(path, data_file):
 
 def create_sasa_xyz(path, xyz_file, srad = 1.4, samples = 100, export_file = 'sasa.xyz'):
     """
-    Use an unofficial (?) VMD API to create van der Waals surface points
+    Use VMD API to create van der Waals surface points
 
     Parameters
     ----------

@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: sasaanalysis
+Version: 0.1
+Summary: ['SASA-Analysis', '', 'Perform solvent-accessible surface area (SASA) analysis of a given ', 'macromolecule by probing the SAS with a probe molecule. ', 'Uses LAMMPS singlepoint calculations for that.', '']
+Home-page: https://github.com/hpoggemann/SASA-Analysis
+Author: 
+Author-email: 
