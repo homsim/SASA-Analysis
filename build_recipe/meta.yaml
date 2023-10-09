@@ -1,0 +1,17 @@
+package:
+    name: sasaanalysis
+    version: 0.1
+
+source:
+    path : ..
+
+requirements:
+    build:
+        - python
+
+    run:
+        - python
+        - numpy
+        - ovito
+        - vmd-python
+

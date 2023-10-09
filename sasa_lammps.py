@@ -9,9 +9,9 @@ from ovito.io import import_file, export_file
 import numpy as np
 import subprocess
 
-# ignore warnings about ovito being installed via PyPi
-import warnings
-warnings.filterwarnings('ignore', message='.*OVITO.*PyPI')
+## ignore warnings about ovito being installed via PyPi
+#import warnings
+#warnings.filterwarnings('ignore', message='.*OVITO.*PyPI')
 
 LAMMPS_EXE = '/home/hanna/Programs/lammps-23Jun2022/src/lmp_mpi'
 

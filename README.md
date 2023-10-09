@@ -1,5 +1,3 @@
-**Package not yet ready to use! Do not execute `setup.py`!**
-
 # SASA-Analysis
 Analyses interaction energyies between protein/macromolecules and probe atom/molecule at the solvent accessible surface area of the molecule
 Interaction energies are determined by using ReaxFF in the LAMMPS simulation suite.
@@ -9,7 +7,7 @@ Interaction energies are determined by using ReaxFF in the LAMMPS simulation sui
 
 ## Step 2
 - Generate SASA coordinates using the vmd.tcl file
-- run file with: ``` vmd -dispdev text -eofexit < vmd.tcl ```
+- run file with: `vmd -dispdev text -eofexit < vmd.tcl`
     - therefore .xyz strcutre of the protein/enzyme has to be in the same folder and names in the .tcl file
 
 ## Step 3
@@ -58,3 +56,46 @@ Interaction energies are determined by using ReaxFF in the LAMMPS simulation sui
 ## Analysis
 
 - [ ] Proper output file format with probe position, energy, residue
+
+# Build and Install
+
+The package requires the `vmd-python` package, which is only distributed in the `conda-forge` channel. For this reason, this package has to be installed in a conda environment as its dependencies cannot be installed from PyPI alone. 
+The package can be build and then installed locally. 
+
+## Build
+
+For building the package one can use a dedicated conda environment, which has all the depedencies (missing will be installed upon building).
+
+```
+conda create --name sasa 
+conda activate sasa
+```
+
+Make sure that atomatic uploading to the Anaconda repository is turned of (this is the default). Otherwise execute:
+
+```
+conda config --set anaconda_upload false
+```
+
+In the `SASA-Analysis` directory execute (will take some time):
+
+```
+conda build build_recipe/ -c https://conda.ovito.org -c conda-forge 
+```
+
+This builds the package locally in your `~/anaconda3/conda-bld`. 
+
+## Install
+
+It can then be installed as a package via
+
+```
+conda install --use-local sasaanalysis -c https://conda.ovito.org -c conda-forge
+```
+
+Again, this can take some time, because it needs to solve a lot of dependencies.
+The order of the `-c` options is important. `https://conda.ovito.org` has to be stated first in order to install `ovito` from this repository and not from the `conda-forge`. For some reason installing `ovito` from the conda-forge leads to it not being found upon importing.
+
+# Usage
+
+...
