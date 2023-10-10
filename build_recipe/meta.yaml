@@ -12,6 +12,6 @@ requirements:
     run:
         - python
         - numpy
-        - ovito
-        - vmd-python
+        - ovito==3.9.2
+        - vmd-python==3.1.4
 
