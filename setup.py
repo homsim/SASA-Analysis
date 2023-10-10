@@ -5,7 +5,7 @@ of a given macromolecule in order to create an energy landscape of that molecule
 """
 
 
-DOCSTRING = __doc__split('\n')
+DOCSTRING = __doc__.split('\n')
 
 from distutils.core import setup
 

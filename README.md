@@ -38,11 +38,11 @@ Interaction energies are determined by using ReaxFF in the LAMMPS simulation sui
 ## General
 
 - [X] Create function(s) to write SASA positions
-- [ ] Write proper `README.md`
-- [ ] Implement as importable package -> How to partition the methods properly?
-- [ ] ~~Write/Finalize `setup.py` and/or `requirements.txt`~~
-- [ ] ~~(Maybe add entry point in `setup.py`)~~
-- [ ] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
+- [x] Write proper `README.md`
+- [X] Implement as importable package -> How to partition the methods properly?
+- [X] ~~Write/Finalize `setup.py` and/or `requirements.txt`~~
+- [X] ~~(Maybe add entry point in `setup.py`)~~
+- [X] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
 
 ## 1-atomic probe
 

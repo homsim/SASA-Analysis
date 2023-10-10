@@ -53,4 +53,4 @@ dump            traj all custom 1 traj.lmp id mol type element &
 dump_modify     traj append yes element H C N O S Mg Fe Cl #names elements in dump file correctly 
 ############### run 
 timestep	0.15 #in fs
-run		0 #number of iterations
+run		0 post no #number of iterations
