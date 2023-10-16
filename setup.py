@@ -5,18 +5,19 @@ of a given macromolecule in order to create an energy landscape of that molecule
 """
 
 
-DOCSTRING = __doc__.split('\n')
+DOCSTRING = __doc__.split("\n")
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 requirements = [
-    'numpy',
-#    'ovito',
-#    'vmd-python'
+    "numpy",
+    #    'ovito',
+    #    'vmd-python'
 ]
 
 setup(
-    name = 'sasaanalysis',
-    version = 0.1,
-    install_requires = requirements,
+    name="sasaanalysis",
+    version=0.1,
+    install_requires=requirements,
+    packages=find_packages(),
 )

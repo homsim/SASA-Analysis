@@ -83,7 +83,7 @@ with open(path+'NearestNeighbors.txt', 'w') as fp:
         fp.write("\t %s\n" %neighbor['res'][i])
 
 with open(path+'NearestNeighbors.txt')as f2:
-    for i,l in enumerate(f2):
+        for i,l in enumerate(f2):
         if i>0:
             data['res'].append(l.split()[1])
 
@@ -108,10 +108,10 @@ np.savetxt(path+folder+'spec.xyz', df, delimiter='  ',fmt='%s', header='%s \n at
 
 
 # save output file without residue numbers
-ignore_keys = {'res'}
-new = {k:v for k,v in data.items() if k not in ignore_keys}
-df2 = pd.DataFrame(new)
-np.savetxt(path+folder+'energy.xyz', df2, delimiter='  ',fmt='%s', header='atom  x  y  z  etot[kcal/mol]')
+# ignore_keys = {'res'}
+# new = {k:v for k,v in data.items() if k not in ignore_keys}
+# df2 = pd.DataFrame(new)
+# np.savetxt(path+folder+'energy.xyz', df2, delimiter='  ',fmt='%s', header='atom  x  y  z  etot[kcal/mol]')
 
 
 # In[ ]:
