@@ -17,6 +17,11 @@ from sasa_lammps.conversion import create_sasa_xyz, neighbor_finder
 def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path="."):
     """
     Run the SASA analysis on a given macromolecule using a given probe molecule.
+    Care must be taken for N-atomic probe molecules: The script does not identify
+    a plane or something in the probe molecule. It just makes sure that at every 
+    interaction site the probe faces the macromolecule with the same orientation.
+    However, the orientation itself is purely determined by the configuration 
+    given in the mol_file.
 
     Parameters
     ----------
