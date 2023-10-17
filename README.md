@@ -42,7 +42,7 @@ conda activate sasa_test    # or however you named the env
 ## Build
 
 For building the package the created environment should now have all the depedencies.
-Make sure that atomatic uploading to the Anaconda repository is turned of (this is the default). Otherwise execute:
+Make sure that atomatic uploading to the Anaconda repository is turned off (this is the default). Otherwise execute:
 
 ```
 conda config --set anaconda_upload false
