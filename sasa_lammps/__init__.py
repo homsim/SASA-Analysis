@@ -1,1 +1,1 @@
-from sasa_lammps.sasa_lammps import sasa
+from sasa_lammps.sasa_main import sasa
