@@ -7,8 +7,6 @@ LAMMPS input instead. This would probably avoid the huge overhead of the LAMMPS
 initialization, which probably takes the most amount of computational time right now. 
 """
 
-import os
-
 from sasa_lammps.conversion import convert_data_file
 from sasa_lammps.execution import exec_lammps_iterations
 from sasa_lammps.conversion import create_sasa_xyz, neighbor_finder
