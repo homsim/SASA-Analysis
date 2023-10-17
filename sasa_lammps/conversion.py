@@ -27,9 +27,10 @@ def convert_data_file(path, data_file):
     return xyz_file
 
 
-def create_sasa_xyz(path, xyz_file, srad=1.4, samples=100):
+def create_sasa_xyz(path, xyz_file, srad, samples):
     """
-    Use an unofficial (?) VMD API to create van der Waals surface points
+    Use an unofficial (?) VMD API to create van der Waals surface points:
+    https://github.com/Eigenstate/vmd-python
 
     Parameters
     ----------
@@ -39,15 +40,14 @@ def create_sasa_xyz(path, xyz_file, srad=1.4, samples=100):
         Name of the xyz-file to use
     srad : float
         Probe radius: Effectively a scaling factor for the vdW radii
-        (Default: 1.4, which is the most commonly used because its approx. the
-        radius of water)
     samples : int
         Maximum points on the atomic vdW sphere to generate per atom
-        (Default: 100)
 
     Returns
     -------
-    None
+    sasa_points : numpy.ndarray
+        (N, 3) Array of coordinates on the SAS. 
+        N is loosely determined by 'samples' argument.
 
     """
     export_file = "sasa.xyz"
@@ -68,7 +68,9 @@ def create_sasa_xyz(path, xyz_file, srad=1.4, samples=100):
         fmt="%s",
     )
 
-    return np.array(sasa_points)
+    sasa_points = np.array(sasa_points)
+
+    return sasa_points
 
 
 def neighbor_finder(path, data_file, sasa_positions):
@@ -121,12 +123,13 @@ def rotate_probe(path, data_file, sasa_positions, neighbors):
     ----------
     path : str
         Path to xyz_file and where to export files to
-    mol_file : str
-        Name of the molecule file of the probe atom
     data_file: str
         Name of the LAMMPS data file of the macromolecule
     sasa_positions : numpy.array
         Coordinates of the points on the SAS
+    neighbors : dict
+        Dictionary of neighbor list informations.
+        Output of the neighbor_finder() method
 
     Returns
     -------

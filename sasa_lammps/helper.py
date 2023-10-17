@@ -1,40 +1,34 @@
 import os
+import sasa_lammps
+import shutil
 
 
 def check_files(path):
-    """Check if all the relevant files are present to exec LAMMPS"""
+    """
+    Check if all the relevant files are present to exec LAMMPS
+    and copy LAMMPS input file templates.
+    """
     fs = os.listdir(path)
 
-    to_rm = ["in.SASA", "etot", "traj.lmp", "thermolog1", "spec.xyz"]
+    to_rm = ["etot", "traj.lmp", "thermolog1", "spec.xyz"]
     for f in to_rm:
         if f in fs:
             print(f"{f} file already exists. Will be overwritten...")
             os.remove(os.path.join(path, f))
 
-    """
-    prefixes = ["in.", "data."]
-    suffixes = [".mol", ".ff"]
+    # copy the LAMMPS input template to the working dir
+    module_dir = os.path.dirname(sasa_lammps.__file__)
+    shutil.copy(os.path.join(module_dir, "in.pre"), os.path.join(path, "in.pre"))
+    shutil.copy(
+        os.path.join(module_dir, "in.template"), os.path.join(path, "in.template")
+    )
 
-    for p in prefixes:
-        if [f for f in fs if f.startswith(p)]:
-            continue
-        else:
-            print(f"No {p}* file found. Aborting...")
-            return False
-    for s in suffixes:
-        if [f for f in fs if f.endswith(s)]:
-            continue
-        else:
-            print(f"No *{s} file found. Aborting...")
-            return False
-    """
-
-    return True
+    return 0
 
 
-def count_atoms_in_mol(mol):
+def count_atoms_in_mol(mol_file):
     """Count number of atoms in molecule file"""
-    with open(mol, "r") as f:
+    with open(mol_file, "r") as f:
         for line in f:
             if "atoms" in line:
                 N = int(line.split()[0])

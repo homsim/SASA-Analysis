@@ -1,18 +1,20 @@
 """
 Package to execute instances of LAMMPS to perform probe analysis of the
 solvent-accessible-surface-area (SASA).
+
+...Instead of calling LAMMPS repeatedly one could also write a loop in the 
+LAMMPS input instead. This would probably avoid the huge overhead of the LAMMPS
+initialization, which probably takes the most amount of computational time right now. 
 """
 
 import os
 
 from sasa_lammps.conversion import convert_data_file
-from sasa_lammps.execution import exec_lammps_one, exec_lammps_more
-from sasa_lammps.helper import count_atoms_in_mol
+from sasa_lammps.execution import exec_lammps_iterations
 from sasa_lammps.conversion import create_sasa_xyz, neighbor_finder
-from sasa_lammps.out_analysis import out_analysis
 
 
-def sasa(data_file, mol, lammps_exe, n_procs=1, srad=1.4, samples=100, path="."):
+def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path="."):
     """
     Run the SASA analysis on a given macromolecule using a given probe molecule.
 
@@ -20,7 +22,7 @@ def sasa(data_file, mol, lammps_exe, n_procs=1, srad=1.4, samples=100, path=".")
     ----------
     data_file : str
         Name of the LAMMPS data file of the macromolecule
-    mol : str
+    mol_file : str
         Name of the LAMMPS mol file to use as probe of the SAS
     lammps_exe : str
         Full path to the LAMMPS executable
@@ -44,33 +46,23 @@ def sasa(data_file, mol, lammps_exe, n_procs=1, srad=1.4, samples=100, path=".")
     # convert data file
     xyz_file = convert_data_file(path, data_file)
     # create sasa position file
-    sasa_positions = create_sasa_xyz(path, xyz_file, srad=srad, samples=samples)
-
-    # count atoms in mol
-    num_atoms = count_atoms_in_mol(os.path.join(path, mol))
+    sasa_positions = create_sasa_xyz(path, xyz_file, srad, samples)
 
     # build neigbor list
     neighbors = neighbor_finder(path, data_file, sasa_positions)
 
     # execute
-    if num_atoms == 1:
-        exec_lammps_one(path, data_file, "in.append", mol, lammps_exe, n_procs)
-    else:
-        exec_lammps_more(
-            path, data_file, "in.append", mol, lammps_exe, n_procs, neighbors
-        )
-
-    out_analysis(path, sasa_positions, neighbors)
+    exec_lammps_iterations(
+        path, data_file, mol_file, lammps_exe, n_procs, neighbors
+    )
 
     return 0
 
 
 def main():
-    """
-    main function mainly for testing
-    """
+    """main function mainly for testing"""
+    
     # declare files etc
-
     data_file = "data.Cvi_nowater"
     mol = "h.mol"
     lammps_exe = "/opt/lammps-23Jun2022/src/lmp_mpi"
