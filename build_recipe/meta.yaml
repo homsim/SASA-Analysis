@@ -1,0 +1,15 @@
+package:
+    name: sasa_lammps
+    version: 0.1
+
+source:
+    path : ..
+
+requirements:
+    build:
+        - python=3.11
+        - setuptools
+
+    run:
+        - python>=3.11
+

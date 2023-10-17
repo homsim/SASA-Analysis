@@ -1,50 +1,15 @@
-**Package not yet ready to use! Do not execute `setup.py`!**
-
-# SASA-Analysis
-Analyses interaction energyies between protein/macromolecules and probe atom/molecule at the solvent accessible surface area of the molecule
-Interaction energies are determined by using ReaxFF in the LAMMPS simulation suite.
-## Step 1
-- prepare .xyz of the protein/macro molecule
-- file should contain only the molecule in vaccum (no water or other solvent molecules)
-
-## Step 2
-- Generate SASA coordinates using the vmd.tcl file
-- run file with: ``` vmd -dispdev text -eofexit < vmd.tcl ```
-    - therefore .xyz strcutre of the protein/enzyme has to be in the same folder and names in the .tcl file
-
-## Step 3
-- one atomic probe molecule:
-    - run lammps_SASA-1atom.py in respective folder (h-ion in the example)
-    - right .mol file, .data file and forcefield file has to be in that folder too
-- more atomic probe molecules:
-    - run SASA_rotationfile.py first to get right orientation
-    - run lammps_SASA-run.py in respective folder (h202 in the example)
-    - right .mol file, .data file, rotation.xyz and forcefield file has to be in that folder too
-
-  ## Step 4
-  - Interaction energies of the single point calculations are stored in etot file
-  - Use SASA_OutputAnalysis.py to generate an xyz file with:
-    -  the coordinates of the probe molecules
-    -  the interaction energies
-    -  the respective molecule residues which are closest do the probe molecule
-  -  For running SASA_OutputAnalysis.py you need this files:
-    -  etot
-    -  sasa.xyz
-    -  NearestNeighbors.txt
-    -  data. file
-
-
-
 # ToDo
 
 ## General
 
 - [X] Create function(s) to write SASA positions
-- [ ] Write proper `README.md`
-- [ ] Implement as importable package -> How to partition the methods properly?
-- [ ] ~~Write/Finalize `setup.py` and/or `requirements.txt`~~
-- [ ] ~~(Maybe add entry point in `setup.py`)~~
-- [ ] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
+- [x] Write proper `README.md`
+- [X] Implement as importable package -> How to partition the methods properly?
+- [X] ~~Write/Finalize `setup.py` and/or `requirements.txt`~~
+- [X] ~~(Maybe add entry point in `setup.py`)~~
+- [X] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
+- [X] Figure out the import...
+- [ ] Create a class hirarchy to avoid the countless repeating function arguments
 
 ## 1-atomic probe
 
@@ -53,8 +18,98 @@ Interaction energies are determined by using ReaxFF in the LAMMPS simulation sui
 
 ## N_atomic probe
 
-- [ ] Rotation of the molecule in order to get defined interactions
+- [X] Rotation of the molecule in order to get defined interactions
 
 ## Analysis
 
-- [ ] Proper output file format with probe position, energy, residue
+- [X] Proper output file format with probe position, energy, residue
+
+
+# Build and Install
+
+The package requires the `vmd-python` package, which is only distributed in the `conda-forge` channel. For this reason, this package has to be installed in a conda environment as its dependencies cannot be installed from PyPI alone. 
+This package will be build locally and then imported in a new conda environment that is created from the `env.yml` file. This is only supposed to be a temporary solution.
+
+## Environment
+
+First a conda environment has to be created from a `env.yml` file. The name of the resulting environment will be `sasa_test`, but can be changed by modifying the first line in the `env.yml` file:
+
+```
+conda env create -f env.yml
+conda activate sasa_test    # or however you named the env
+```
+
+## Build
+
+For building the package the created environment should now have all the depedencies.
+Make sure that atomatic uploading to the Anaconda repository is turned of (this is the default). Otherwise execute:
+
+```
+conda config --set anaconda_upload false
+```
+
+In the `SASA-Analysis` directory execute (will take some time):
+
+```
+conda build build_recipe/  
+```
+
+This builds the package locally in your `~/anaconda3/conda-bld`. 
+
+## Install
+
+It can then be installed as a package via
+
+```
+conda install --use-local sasa_lammps 
+```
+
+# Usage
+
+The package really only has one usable method `sasa_lammps.sasa()`:
+
+```
+>>> print(sasa.__doc__)
+
+    Run the SASA analysis on a given macromolecule using a given probe molecule.
+    Care must be taken for N-atomic probe molecules: The script does not identify
+    a plane or something in the probe molecule. It just makes sure that at every 
+    interaction site the probe faces the macromolecule with the same orientation.
+    However, the orientation itself is purely determined by the configuration 
+    given in the mol_file.
+
+    Parameters
+    ----------
+    data_file : str
+        Name of the LAMMPS data file of the macromolecule
+    mol_file : str
+        Name of the LAMMPS mol file to use as probe of the SAS
+    lammps_exe : str
+        Full path to the LAMMPS executable
+    n_procs : int
+        Number of MPI processes to start LAMMPS with (Default: 1)
+    srad : float
+        Probe radius: Effectively a scaling factor for the vdW radii
+        (Default: 1.4, which is the most commonly used because its approx. the
+        radius of water)
+    samples : int
+        Maximum points on the atomic vdW sphere to generate per atom (Default: 100)
+    path : str
+        Execution path (Default: .)
+
+    Returns
+    -------
+    None
+```
+
+## Example
+
+```
+from sasa_lammps import sasa
+
+data_file = "data.Cvi_nowater"
+mol = "h2o2.mol"
+lammps_exe = "/opt/lammps-23Jun2022/src/lmp_mpi"
+
+sasa(data_file, mol, lammps_exe)
+```
