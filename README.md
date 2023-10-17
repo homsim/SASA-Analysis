@@ -8,7 +8,7 @@
 - [X] ~~Write/Finalize `setup.py` and/or `requirements.txt`~~
 - [X] ~~(Maybe add entry point in `setup.py`)~~
 - [X] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
-- [ ] Figure out the import...
+- [X] Figure out the import...
 - [ ] Create a class hirarchy to avoid the countless repeating function arguments
 
 ## 1-atomic probe
