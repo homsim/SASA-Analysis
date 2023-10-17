@@ -17,32 +17,32 @@
 ###############################################################################
 ###############################################################################
 
-units		    real # define unit sys -> real is vital for reax
-atom_style	    full # reax needs charge or full
+units		real # define unit sys -> real is vital for reax
+atom_style	full # reax needs charge or full
 dimension       3
 boundary        p p p
 ############### read data
-read_data	    ${DataFile} # structure file
+read_data	${DataFile} # structure file
 ############### create plasma molecules
-molecule	    probe ${MolFile}
+molecule	probe ${MolFile}
 create_atoms 	0 single ${sasaX} ${sasaY} ${sasaZ} mol probe 39802 &
                 rotate ${rotAng} ${rotVecX} ${rotVecY} ${rotVecZ} 
-############## groups
-group   		heme id 3647 3648 3649 3650 3651 
-group   		S_cys id 309
-group   		fix union heme S_cys
-group   		rest subtract all fix
-group   		plasma id > 3720
-group   		enzyme subtract all plasma 
+############### groups
+group   	heme id 3647 3648 3649 3650 3651 
+group   	S_cys id 309
+group   	fix union heme S_cys
+group   	rest subtract all fix
+group   	plasma id > 3720
+group   	enzyme subtract all plasma 
 ############### potenital
 pair_style      reaxff NULL checkqeq no safezone 1.6 mincap 100 minhbonds 150
 pair_coeff      * * protein2013.ff H C N O S X X Cl # ff, elements in the right order, X for Fe 
-#fix             QEq rest qeq/reax 1 0.0 10.0 1e-6 reaxff
+#fix            QEq rest qeq/reax 1 0.0 10.0 1e-6 reaxff
 
 neighbor        2 bin
 neigh_modify    every 10 delay 0 check no
 ############### ensemble
-fix	        	nve all nve #thermodyn ensemble fix
+fix	        nve all nve #thermodyn ensemble fix
 fix             langv all langevin 300.0 300.0 100.0 846321
 ############### fix Fe and S
 fix 	    	freeze fix setforce 0.0 0.0 0.0
@@ -59,14 +59,14 @@ variable    	etotal equal etotal
 variable    	vol equal vol
 variable    	density equal density
 ################ print
-fix		        thermolog1 all print 1 &
-	        	"${step} ${time} ${temp} ${pe} ${ke} ${etotal} ${vol} ${density}" &
-	        	append thermolog1 screen no title "#step time temp epot ekin etotal volume density" 
-	        	# saves the variables of thermo into an extra file 
+fix		thermolog1 all print 1 &
+	        "${step} ${time} ${temp} ${pe} ${ke} ${etotal} ${vol} ${density}" &
+	        append thermolog1 screen no title "#step time temp epot ekin etotal volume density" 
+	        # saves the variables of thermo into an extra file 
 ############### dump
 dump            traj all custom 1 traj.lmp id mol type element &
-	            x y z vx vy vz q # v_AtomPE v_AtomS #trajecory files
+	        x y z vx vy vz q # v_AtomPE v_AtomS #trajecory files
 dump_modify     traj append yes element H C N O S Mg Fe Cl # names elements in dump file correctly 
 ############### run 
-run		        0 post no #number of iterations
-print 			"${etotal}" append etot screen no
+run		0 post no #number of iterations
+print 		"${etotal}" append etot screen no
