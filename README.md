@@ -9,6 +9,9 @@ First a conda environment has to be created from a `env.yml` file. The name of t
 
 ```bash
 conda env create -f env.yml
+```
+
+```bash
 conda activate <env-name>    # <env-name>='sasa' or however you named the env
 ```
 
@@ -44,6 +47,9 @@ The package really only has one usable method `sasa_lammps.sasa()`:
 
 ```python
 >>> from sasa_lammps import sasa
+```
+
+```
 >>> print(sasa.__doc__)
     Run the SASA analysis on a given macromolecule using a given probe molecule.
     Care must be taken for N-atomic probe molecules: The script does not identify
