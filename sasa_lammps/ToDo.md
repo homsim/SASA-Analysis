@@ -10,6 +10,7 @@
 - [X] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
 - [ ] Figure out the import...
 - [ ] Create a class hirarchy to avoid the countless repeating function arguments
+- [X] Strings for the force field and dump commands
 
 ## 1-atomic probe
 

@@ -1,3 +1,6 @@
+__pycache__/
+sasa_lammps/__pycache__/
+
 # testing directory
 testing/
 testing_import/
