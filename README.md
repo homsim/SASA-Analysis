@@ -7,7 +7,7 @@ This package will be build locally and then imported in a new conda environment 
 
 First a conda environment has to be created from a `env.yml` file. The name of the resulting environment will be `sasa`, but can be changed by modifying the first line in the `env.yml` file:
 
-```
+```bash
 conda env create -f env.yml
 conda activate <env-name>    # <env-name>='sasa' or however you named the env
 ```
@@ -18,13 +18,13 @@ For building the package the created environment should now have all the
 depedencies.
 Make sure that atomatic uploading to the Anaconda repository is turned of (this is the default). Otherwise execute:
 
-```
+```bash
 conda config --set anaconda_upload false
 ```
 
 In the `SASA-Analysis` directory execute:
 
-```
+```bash
 conda build build_recipe/  
 ```
 
@@ -34,7 +34,7 @@ This builds the package locally in your `~/anaconda3/conda-bld`.
 
 It can then be installed as a package via
 
-```
+```bash
 conda install --use-local sasa_lammps 
 ```
 
@@ -42,7 +42,7 @@ conda install --use-local sasa_lammps
 
 The package really only has one usable method `sasa_lammps.sasa()`:
 
-```
+```python
 >>> from sasa_lammps import sasa
 >>> print(sasa.__doc__)
     Run the SASA analysis on a given macromolecule using a given probe molecule.
@@ -92,7 +92,7 @@ In the directory `example` you find an example on the CviUPO with H2O2 which sam
 - h2o2.mol
 - protein2013.ff
 
-```
+```python
 from sasa_lammps import sasa
 
 data_file = "data.Cvi_nowater"
