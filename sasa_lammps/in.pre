@@ -16,28 +16,10 @@ boundary        p p p
 read_data	    ${DataFile} # structure file
 ############### create plasma molecules
 molecule	    probe ${MolFile}
-#create_atoms 	0 single ${sasaX} ${sasaY} ${sasaZ} mol probe 39802 &
-#                rotate ${rotAng} ${rotVecX} ${rotVecY} ${rotVecZ} 
-############## groups
-group   		heme id 3647 3648 3649 3650 3651 
-group   		S_cys id 309
-group   		fix union heme S_cys
-group   		rest subtract all fix
-group   		plasma id > 3720
-group   		enzyme subtract all plasma 
 ############### potenital
-pair_style      reaxff NULL checkqeq no safezone 1.6 mincap 100 minhbonds 150
-pair_coeff      * * protein2013.ff H C N O S X X Cl # ff, elements in the right order, X for Fe 
-#fix             QEq rest qeq/reax 1 0.0 10.0 1e-6 reaxff
-
-neighbor        2 bin
-neigh_modify    every 1 delay 0 check no
-############### ensemble
-fix	        	nve all nve #thermodyn ensemble fix
-fix             langv all langevin 300.0 300.0 100.0 846321
-############### fix Fe and S
-fix 	    	freeze fix setforce 0.0 0.0 0.0
-velocity    	fix set NULL NULL NULL
+include			${ParamsFile}
+############### initial velocity
+velocity    	all set NULL NULL NULL
 ############### thermo
 thermo	    	1  #saves thermo data all 100 iterations
 thermo_style	custom step time temp pe ke etotal vol density #defines which parameters in thermo
@@ -54,7 +36,7 @@ fix		        thermolog1 all print 1 &
 	        	"${step} ${time} ${temp} ${pe} ${ke} ${etotal} ${vol} ${density}" &
 	        	append thermolog1 screen no title "#step time temp epot ekin etotal volume density" 
 	        	# saves the variables of thermo into an extra file 
-fix	        	etot all print 1 "${etotal}" append etot screen no title ""
+fix	        	etot all print 1 "${etotal}" append etot screen no title "Total energy in kcal/mole"
 ############### run 
 run		        0
 ###############

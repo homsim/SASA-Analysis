@@ -7,7 +7,7 @@ from sasa_lammps.conversion import rotate_probe
 
 
 def exec_lammps_iterations(
-    path, data_file, mol_file, lammps_exe, n_procs, neighbors
+    path, data_file, mol_file, params_file, lammps_exe, n_procs, neighbors
 ):
     """
     Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe
@@ -20,6 +20,8 @@ def exec_lammps_iterations(
         Name of the LAMMPS data file of the macromolecule
     mol_file : str
         Name of the molecule file of the probe atom
+    params_file : str
+        Name of the file with informations on the force field
     lammps_exe : str
         Full path to the LAMMPS executable
     n_procs : int
@@ -38,7 +40,7 @@ def exec_lammps_iterations(
     check_files(path)
 
     # get the energies for the isolated macro- and probe molecule, respectively
-    e_mol, e_prob = pre_calc(path, lammps_exe, data_file, mol_file, n_procs)
+    e_mol, e_prob = pre_calc(path, lammps_exe, data_file, mol_file, params_file, n_procs)
 
     # create the sasa positions
     sasa_positions = np.genfromtxt(
@@ -46,8 +48,8 @@ def exec_lammps_iterations(
     )
     n_probes = len(sasa_positions)
 
-    # create final output file header
-    header = f"{n_probes}\natom\tx\ty\tz\tres\tetot [kcal/mole]\teint [kcal/mole]\n"
+    # create final output file header and write to spec.xyz
+    header = f"{n_probes}\natom\tx\ty\tz\tres\tetot [eV]\teint [eV]\n"
     with open(os.path.join(path, "spec.xyz"), "w") as f:
         f.write(header)
 
@@ -69,6 +71,7 @@ def exec_lammps_iterations(
             n_probes,
             data_file,
             mol_file,
+            params_file, 
             pos,
             rot,
             n_procs,
@@ -81,6 +84,11 @@ def exec_lammps_iterations(
                 pass
             etot = float(line)
         eint = etot - (e_mol + e_prob)
+
+        # convert kcal/mole to eV. This is correct as long as LAMMPS
+        # uses the units real command
+        etot = etot * 0.04336
+        eint = eint * 0.04336
 
         # append the final output file
         with open(os.path.join(path, "spec.xyz"), "a") as f:
@@ -95,7 +103,8 @@ def exec_lammps_iterations(
     return 0
 
 
-def pre_calc(path, lammps_exe, data_file, mol_file, n_procs):
+
+def pre_calc(path, lammps_exe, data_file, mol_file, params_file, n_procs):
     """
     Do two pre-runs in LAMMPS: One of the isolated macromolecule and one of the isolated probe molecule
 
@@ -109,6 +118,8 @@ def pre_calc(path, lammps_exe, data_file, mol_file, n_procs):
         Name of the LAMMPS data file of the macromolecule
     mol_file : str
         Name of the molecule file of the probe atom
+    params_file : str
+        Name of the file with informations on the force field
     n_procs : int
         Number of MPI processes to start LAMMPS with (Default: 1)
 
@@ -129,6 +140,7 @@ def pre_calc(path, lammps_exe, data_file, mol_file, n_procs):
         0,
         data_file,
         mol_file,
+        params_file, 
         [0.0, 0.0, 0.0],
         [0.0, 1.0, 0.0, 0.0],
         n_procs,
@@ -148,6 +160,7 @@ def run_lmp(
     max_iterat,
     data_file,
     mol_file,
+    params_file, 
     pos,
     rot,
     n_procs,
@@ -171,6 +184,8 @@ def run_lmp(
         Name of the LAMMPS data file of the macromolecule
     mol_file : str
         Name of the molecule file of the probe atom
+    params_file : str
+        Name of the file with informations on the force field
     pos : list
         x, y, z position list of the SAS positions
     rot : list
@@ -196,7 +211,7 @@ def run_lmp(
         -var sasaX {pos[0]:.3f} -var sasaY {pos[1]:.3f} \
         -var sasaZ {pos[2]:.3f} -var rotAng {rot[0]:.3f} \
         -var rotVecX {rot[1]:.3f} -var rotVecY {rot[2]:.3f} \
-        -var rotVecZ {rot[3]:.3f} 
+        -var rotVecZ {rot[3]:.3f} -var ParamsFile {params_file}
     """
 
     try:
