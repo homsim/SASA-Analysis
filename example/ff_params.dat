@@ -1,0 +1,2 @@
+pair_style      reaxff NULL checkqeq no safezone 1.6 mincap 100 minhbonds 150
+pair_coeff      * * protein2013.ff H C N O S X X Cl # ff, elements in the right order, X for Fe 

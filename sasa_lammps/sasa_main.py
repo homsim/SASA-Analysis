@@ -12,7 +12,7 @@ from sasa_lammps.execution import exec_lammps_iterations
 from sasa_lammps.conversion import create_sasa_xyz, neighbor_finder
 
 
-def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path="."):
+def sasa(data_file, mol_file, lammps_exe, params_file="ff_params.dat", n_procs=1, srad=1.4, samples=100, path="."):
     """
     Run the SASA analysis on a given macromolecule using a given probe molecule.
     Care must be taken for N-atomic probe molecules: The script does not identify
@@ -29,6 +29,13 @@ def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path
         Name of the LAMMPS mol file to use as probe of the SAS
     lammps_exe : str
         Full path to the LAMMPS executable
+    params_file : str
+        Name of the file with informations on the force field. The template LAMMPS
+        input requires:
+            pair_style <...>
+            pair_coeff <...>
+    See the examples/ff_params.dat for an example. As of now the 'units real' command in the in.template kind of restricts to use reaxff pair_style.
+    (Default: ff_params.dat)
     n_procs : int
         Number of MPI processes to start LAMMPS with (Default: 1)
     srad : float
@@ -56,7 +63,7 @@ def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path
 
     # execute
     exec_lammps_iterations(
-        path, data_file, mol_file, lammps_exe, n_procs, neighbors
+        path, data_file, mol_file, params_file, lammps_exe, n_procs, neighbors
     )
 
     return 0
