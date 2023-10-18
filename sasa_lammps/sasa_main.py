@@ -7,16 +7,29 @@ LAMMPS input instead. This would probably avoid the huge overhead of the LAMMPS
 initialization, which probably takes the most amount of computational time right now. 
 """
 
-import os
-
 from sasa_lammps.conversion import convert_data_file
 from sasa_lammps.execution import exec_lammps_iterations
 from sasa_lammps.conversion import create_sasa_xyz, neighbor_finder
 
 
-def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path="."):
+def sasa(
+    data_file,
+    mol_file,
+    ff_str,
+    dump_str,
+    lammps_exe,
+    n_procs=1,
+    srad=1.4,
+    samples=100,
+    path=".",
+):
     """
     Run the SASA analysis on a given macromolecule using a given probe molecule.
+    Care must be taken for N-atomic probe molecules: The script does not identify
+    a plane or something in the probe molecule. It just makes sure that at every
+    interaction site the probe faces the macromolecule with the same orientation.
+    However, the orientation itself is purely determined by the configuration
+    given in the mol_file.
 
     Parameters
     ----------
@@ -24,6 +37,14 @@ def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path
         Name of the LAMMPS data file of the macromolecule
     mol_file : str
         Name of the LAMMPS mol file to use as probe of the SAS
+    ff_str : str
+        Force field parameters to provide to LAMMPS. See examples directory
+        https://docs.lammps.org/pair_style.html
+        https://docs.lammps.org/pair_coeff.html
+        Care must be taken because currently the 'unit real' in the in.template basically restricts to only use pair_style reaxff
+    dump_str : str
+        Dump command to provide to LAMMPS. See examples directory
+        https://docs.lammps.org/dump.html
     lammps_exe : str
         Full path to the LAMMPS executable
     n_procs : int
@@ -53,7 +74,7 @@ def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path
 
     # execute
     exec_lammps_iterations(
-        path, data_file, mol_file, lammps_exe, n_procs, neighbors
+        path, data_file, mol_file, ff_str, dump_str, lammps_exe, n_procs, neighbors
     )
 
     return 0
@@ -61,7 +82,7 @@ def sasa(data_file, mol_file, lammps_exe, n_procs=1, srad=1.4, samples=100, path
 
 def main():
     """main function mainly for testing"""
-    
+
     # declare files etc
     data_file = "data.Cvi_nowater"
     mol = "h.mol"

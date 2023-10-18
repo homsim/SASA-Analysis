@@ -46,7 +46,7 @@ def create_sasa_xyz(path, xyz_file, srad, samples):
     Returns
     -------
     sasa_points : numpy.ndarray
-        (N, 3) Array of coordinates on the SAS. 
+        (N, 3) Array of coordinates on the SAS.
         N is loosely determined by 'samples' argument.
 
     """

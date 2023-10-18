@@ -10,14 +10,12 @@ DOCSTRING = __doc__.split("\n")
 from setuptools import setup, find_packages
 
 requirements = [
-    "numpy",
-    #    'ovito',
-    #    'vmd-python'
 ]
 
 setup(
-    name="sasaanalysis",
+    name="sasa_lammps",
     version=0.1,
     install_requires=requirements,
+    include_package_data=True,
     packages=find_packages(),
 )

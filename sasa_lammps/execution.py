@@ -2,12 +2,12 @@ import os
 import subprocess
 import numpy as np
 
-from sasa_lammps.helper import check_files, count_atoms_in_mol
+from sasa_lammps.helper import check_files, count_atoms_in_mol, write_params_file
 from sasa_lammps.conversion import rotate_probe
 
 
 def exec_lammps_iterations(
-    path, data_file, mol_file, lammps_exe, n_procs, neighbors
+    path, data_file, mol_file, ff_str, dump_str, lammps_exe, n_procs, neighbors
 ):
     """
     Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe
@@ -20,6 +20,10 @@ def exec_lammps_iterations(
         Name of the LAMMPS data file of the macromolecule
     mol_file : str
         Name of the molecule file of the probe atom
+    ff_str : str
+        Force field parameters to provide to LAMMPS
+    dump_str : str
+        Dump command to provide to LAMMPS
     lammps_exe : str
         Full path to the LAMMPS executable
     n_procs : int
@@ -37,8 +41,14 @@ def exec_lammps_iterations(
     # remove existing files and copy input templates...
     check_files(path)
 
+    # write ff_str and dump_str to files for LAMMPS to read in
+    write_params_file(ff_str, "ff_params.dat")
+    write_params_file(dump_str, "dump_com.dat")
+
     # get the energies for the isolated macro- and probe molecule, respectively
-    e_mol, e_prob = pre_calc(path, lammps_exe, data_file, mol_file, n_procs)
+    e_mol, e_prob = pre_calc(
+        path, lammps_exe, data_file, mol_file, n_procs
+    )
 
     # create the sasa positions
     sasa_positions = np.genfromtxt(
@@ -46,8 +56,8 @@ def exec_lammps_iterations(
     )
     n_probes = len(sasa_positions)
 
-    # create final output file header
-    header = f"{n_probes}\natom\tx\ty\tz\tres\tetot [kcal/mole]\teint [kcal/mole]\n"
+    # create final output file header and write to spec.xyz
+    header = f"{n_probes}\natom\tx\ty\tz\tres\tetot [eV]\teint [eV]\n"
     with open(os.path.join(path, "spec.xyz"), "w") as f:
         f.write(header)
 
@@ -81,6 +91,11 @@ def exec_lammps_iterations(
                 pass
             etot = float(line)
         eint = etot - (e_mol + e_prob)
+
+        # convert kcal/mole to eV. This is correct as long as LAMMPS
+        # uses the units real command
+        etot = etot * 0.04336
+        eint = eint * 0.04336
 
         # append the final output file
         with open(os.path.join(path, "spec.xyz"), "a") as f:
@@ -116,9 +131,9 @@ def pre_calc(path, lammps_exe, data_file, mol_file, n_procs):
     Returns
     -------
     e_mol : float
-        Energy of the macro molecule
+        Energy of the macro molecule in kcal/mole
     e_prob : float
-        Energy of the probe molecule
+        Energy of the probe molecule in kcal/mole
 
     """
 
@@ -196,7 +211,7 @@ def run_lmp(
         -var sasaX {pos[0]:.3f} -var sasaY {pos[1]:.3f} \
         -var sasaZ {pos[2]:.3f} -var rotAng {rot[0]:.3f} \
         -var rotVecX {rot[1]:.3f} -var rotVecY {rot[2]:.3f} \
-        -var rotVecZ {rot[3]:.3f} 
+        -var rotVecZ {rot[3]:.3f}
     """
 
     try:
