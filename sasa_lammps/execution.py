@@ -46,9 +46,7 @@ def exec_lammps_iterations(
     write_params_file(dump_str, "dump_com.dat")
 
     # get the energies for the isolated macro- and probe molecule, respectively
-    e_mol, e_prob = pre_calc(
-        path, lammps_exe, data_file, mol_file, n_procs
-    )
+    e_mol, e_prob = pre_calc(path, lammps_exe, data_file, mol_file, n_procs)
 
     # create the sasa positions
     sasa_positions = np.genfromtxt(

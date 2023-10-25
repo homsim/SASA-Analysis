@@ -38,8 +38,8 @@ def count_atoms_in_mol(mol_file):
 
 
 def write_params_file(string, file_name):
-    """Write string to a file. Needed to create the include files for LAMMPS to read """
+    """Write string to a file. Needed to create the include files for LAMMPS to read"""
     with open(file_name, "w") as f:
         f.write(f"{string}\n")
-    
+
     return 0
