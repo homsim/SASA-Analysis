@@ -150,11 +150,17 @@ def rotate_probe(path, data_file, sasa_positions, neighbors):
         data_masses
     )
 
+    # get the indices of the particle container according to the IDs
+    ordering = np.argsort(data.particles.identifiers)
+    indices = ordering[np.searchsorted(
+        data.particles.identifiers, neighbors["id"], sorter=ordering)]
+
     # calculate rotation angles and vectors to parse them to LAMMPS
     rot_export = []
-    for i, sasa_pos in enumerate(sasa_positions):
-        com_vec = data_positions[neighbors["id"][i]] - com
-        sas_vec = sasa_pos - data_positions[neighbors["id"][i]]
+    for index, sasa_pos in zip(indices, sasa_positions):
+        curr_id = neighbors["id"][index]
+        com_vec = data_positions[curr_id] - com
+        sas_vec = sasa_pos - data_positions[curr_id]
 
         angle = np.rad2deg(
             np.arccos(
