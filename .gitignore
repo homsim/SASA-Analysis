@@ -2,6 +2,11 @@ __pycache__/
 sasa_lammps/__pycache__/
 
 # testing directory
-testing/
-testing_import/
+testing*
 SASA_example/
+
+# lammps directory 
+lammps-stable*
+
+# ovito directory 
+ovito-basic*
