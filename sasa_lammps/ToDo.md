@@ -11,6 +11,7 @@
 - [ ] Figure out the import...
 - [ ] Create a class hirarchy to avoid the countless repeating function arguments
 - [X] Strings for the force field and dump commands
+- [ ] Add star-import for sasa()
 
 ## 1-atomic probe
 
