@@ -3,7 +3,7 @@ import sasa_lammps
 import shutil
 
 
-def check_files(path):
+def _check_files(path: str) -> None:
     """
     Check if all the relevant files are present to exec LAMMPS
     and copy LAMMPS input file templates.
@@ -26,7 +26,7 @@ def check_files(path):
     return 0
 
 
-def count_atoms_in_mol(mol_file):
+def _count_atoms_in_mol(mol_file: str) -> int:
     """Count number of atoms in molecule file"""
     with open(mol_file, "r") as f:
         for line in f:
@@ -37,9 +37,19 @@ def count_atoms_in_mol(mol_file):
     return N
 
 
-def write_params_file(string, file_name):
+def _write_params_file(string: str, file_name: str) -> None:
     """Write string to a file. Needed to create the include files for LAMMPS to read"""
     with open(file_name, "w") as f:
         f.write(f"{string}\n")
 
     return 0
+
+
+def _read_last_two(path: str, file_name: str) -> list[float, float]:
+    """Read last to lines of file, convert to float and return the read values"""
+    with open(os.path.join(path, file_name), "r") as f:
+        lines = f.readlines()[-2:]
+    l1 = float(lines[0])
+    l2 = float(lines[1])
+
+    return l1, l2
