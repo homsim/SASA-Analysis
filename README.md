@@ -38,7 +38,7 @@ This builds the package locally in your `~/anaconda3/conda-bld`.
 It can then be installed as a package via
 
 ```bash
-conda install --use-local sasa_lammps 
+conda install --use-local sasa_lammps_multi 
 ```
 
 # Usage
