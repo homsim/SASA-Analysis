@@ -11,6 +11,7 @@ import os
 import subprocess
 import numpy as np
 import tqdm
+import signal
 
 from multiprocessing import Pool
 
@@ -106,14 +107,23 @@ class Sasa:
         # create iterable for multiprocessing.Pool.starmap()
         iters = [self.sasa_positions, self.neighbors["res"], self.rotations]
         run_iterable = [
-            ["in.template", i, n_probes, pos, rot, res, e_mol, e_prob, KCAL_TO_EV]
-            for i, (pos, res, rot) in enumerate(zip(*iters))
+            ["in.template", pos, rot, res, e_mol, e_prob, KCAL_TO_EV]
+            for pos, res, rot in zip(*iters)
         ]
 
+        # modify the SIGINT handler to exit Pool gently. For more infos see:
+        # https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
+        original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
         with Pool(processes=self.n_procs) as pool:
-            pool.starmap(
-                self._run_lmp, tqdm.tqdm(run_iterable, total=n_probes), chunksize=1
-            )
+            signal.signal(signal.SIGINT, original_sigint_handler)
+            try:
+                pool.starmap(
+                    self._run_lmp, tqdm.tqdm(run_iterable, total=n_probes), chunksize=1
+                )
+            except KeyboardInterrupt:
+                pool.terminate()
+            else:
+                pool.close()
             # data procesing and output of results handled by LAMMPS
 
         return 0
@@ -133,8 +143,6 @@ class Sasa:
 
         self._run_lmp(
             "in.pre",
-            0,
-            0,
             [0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             0,
@@ -150,8 +158,6 @@ class Sasa:
     def _run_lmp(
         self,
         in_file: str,
-        iterat: int,
-        max_iterat: int,
         pos: float,
         rot: list[float, float, float, float],
         res: int,
