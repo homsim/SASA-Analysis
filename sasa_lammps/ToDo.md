@@ -12,7 +12,8 @@
 - [X] Enable 'real' multiprocessing by running multiple LAMMPS instances in parallel
 - [X] Strings for the force field and dump commands
 - [ ] Function argument to initialize the calculation with out running LAMMPS
-- [ ] Add a proper termination criterion to kill all running processes
+- [X] Add a proper termination criterion to kill all running processes
+- [ ] Redirect error outputs of LAMMPS (`capture_output`)
 - [X] Add star-import for `sasa()`
 - [ ] Run simple benchmark on the MP performance
 
