@@ -13,6 +13,10 @@
 ###                    rotVecX                                              ###
 ###                    rotVecY                                              ###
 ###                    rotVecZ                                              ###
+###                    res                                                  ###
+###                    emol                                                 ###
+###                    eprob                                                ###
+###                    conv                                                 ###
 ###                                                                         ###
 ###############################################################################
 ###############################################################################
@@ -31,11 +35,12 @@ create_atoms 	0 single ${sasaX} ${sasaY} ${sasaZ} mol probe 39802 &
 include			ff_params.dat
 ############### initial velocity
 velocity    	all set 0.0 0.0 0.0
-############### thermo
+############### thermo and log
 thermo	    	1
 variable	    etotal equal etotal
 ############### dump
 include			dump_com.dat
 ############### run 
 run		        0 post no #number of iterations
-print 			"${etotal}" append etot screen no
+variable        eint equal "(v_etotal - v_emol - v_eprob )*v_conv"
+print           "He    ${sasaX}    ${sasaY}    ${sasaZ}    ${res}    $(etotal*v_conv:%.3f)    $(v_eint:%.3f)" append spec.xyz screen no

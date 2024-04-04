@@ -1,5 +1,5 @@
 package:
-    name: sasa_lammps
+    name: sasa_lammps_multi
     version: 0.1
 
 source:

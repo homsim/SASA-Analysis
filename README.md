@@ -38,7 +38,7 @@ This builds the package locally in your `~/anaconda3/conda-bld`.
 It can then be installed as a package via
 
 ```bash
-conda install --use-local sasa_lammps 
+conda install --use-local sasa_lammps_multi 
 ```
 
 # Usage
@@ -52,7 +52,7 @@ The package really only has one usable method `sasa_lammps.sasa()`:
 ```
 >>> print(sasa.__doc__)
     Run the SASA analysis on a given macromolecule using a given probe molecule.
-    Care must be taken for N-atomic probe molecules: The script does not identify
+    Care must be taken for N-atomic probe molecules: The package does not identify
     a plane or something in the probe molecule. It just makes sure that at every
     interaction site the probe faces the macromolecule with the same orientation.
     However, the orientation itself is purely determined by the configuration
@@ -68,14 +68,14 @@ The package really only has one usable method `sasa_lammps.sasa()`:
         Force field parameters to provide to LAMMPS. See examples directory
         https://docs.lammps.org/pair_style.html
         https://docs.lammps.org/pair_coeff.html
-        Care must be taken because currently the 'unit real' in the in.template basically restricts to only use pair_style reaxff
+        Care must be taken because currently the 'unit real' in the in.template basically restricts to only use pair_style reaxff.
     dump_str : str
         Dump command to provide to LAMMPS. See examples directory
         https://docs.lammps.org/dump.html
     lammps_exe : str
         Full path to the LAMMPS executable
     n_procs : int
-        Number of MPI processes to start LAMMPS with (Default: 1)
+        Number of LAMMPS instances to run in parallel (Default: 1)
     srad : float
         Probe radius: Effectively a scaling factor for the vdW radii
         (Default: 1.4, which is the most commonly used because its approx. the
@@ -114,5 +114,5 @@ dump_modify     traj append yes element H C N O S Mg Fe Cl
 """
 
 
-sasa(data_file, mol_file, ff_str, dump_str, lammps_exe)
+sasa(data_file, mol_file, ff_str, dump_str, lammps_exe, n_procs = 2)
 ```
