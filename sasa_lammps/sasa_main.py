@@ -85,12 +85,12 @@ class Sasa:
         ## atom analysis
         neighbor = neighbor_analysis(self.path, "spec.xyz", self.gro_file)
         result = atom_analysis(self.path, "spec.xyz", neighbor)
-        atom_analysis_plot(neighbor, result)
+        atom_analysis_plot(self.path, neighbor, result)
 
         ## residue analysis
-        residuelist = residuelist(self.path, self.gro_file)
-        residue_names, result = residue_analysis(self.path, "spec.xyz", residuelist)
-        residue_analysis_plot(residue_names, result)
+        residuelist(self.path, self.gro_file)
+        residue_names, result = residue_analysis(self.path, "spec.xyz", "residuelist.txt")
+        residue_analysis_plot(self.path, residue_names, result)
 
         return 0
 
@@ -243,6 +243,7 @@ class Sasa:
 
 
 def sasa(
+    gro_file,
     data_file,
     mol_file,
     ff_str,
@@ -295,6 +296,7 @@ def sasa(
     """
 
     S = Sasa(
+        gro_file,
         data_file,
         mol_file,
         ff_str,

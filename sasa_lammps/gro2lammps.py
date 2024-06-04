@@ -23,8 +23,21 @@ class gro2lammps:
     def __init__(self, path, element_library):
         #_init: load data from libary file and write it to dictionary
         self.path = path
-        self.di = pd.read_csv(os.join(path, element_library), delim_whitespace=True)
+        self.di = pd.read_csv(os.path.join(path, element_library), sep='\s+')
     
+    def __delete_solvent(self, infile, pipeline):
+        # Find the place to cut
+        with open(infile, "r") as rf:
+            for i,line in enumerate(rf):
+                if 'SOL' in line or 'SOD' in line:
+                    atmnr = i - 2
+                    break
+        # UPO_del_Solv - Expression selection:
+        pipeline.modifiers.append(ExpressionSelectionModifier(
+            expression = 'ParticleIdentifier>%s'%str(atmnr)))
+        #  UPO_del_Solv - Delete selected
+        pipeline.modifiers.append(DeleteSelectedModifier())
+
     def __change_ParticleTypes(self, frame, data):
         types = data.particles_.particle_types_
         for gro_PT, lammps_PT in zip(self.di['gromacs_ParticleType'], self.di['lammps_ParticleType']):
@@ -41,13 +54,10 @@ class gro2lammps:
     
     def convert(self,infile, outfile):
         # Data import:
-        pipeline = import_file(os.join(self.path,infile))
+        pipeline = import_file(os.path.join(self.path,infile))
 
-        # UPO_del_Solv - Expression selection:
-        pipeline.modifiers.append(ExpressionSelectionModifier(expression = 'ResidueType>25'))
-
-        # UPO_del_Solv - Delete selected:
-        pipeline.modifiers.append(DeleteSelectedModifier())
+        # Delete solvent and ions
+        self.__delete_solvent(infile, pipeline)
 
         # Change Particle IDs
         pipeline.modifiers.append(self.__change_ParticleTypes)
@@ -64,4 +74,4 @@ class gro2lammps:
             output_property = 'Molecule Identifier'))
         data = pipeline.compute()
 
-        export_file(pipeline, os.join(self.path, outfile), "lammps/data",  atom_style="full")
+        export_file(pipeline, os.path.join(self.path, outfile), "lammps/data",  atom_style="full")
