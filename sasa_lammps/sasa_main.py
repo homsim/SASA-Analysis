@@ -255,7 +255,10 @@ def sasa(
     path=".",
 ):
     """
-    Run the SASA analysis on a given macromolecule using a given probe molecule.
+    Run the SASA (solvet accasible surface analysis) on a given macromolecule 
+    using a given probe molecule.
+    The package was designed to start from a gromacs file of the macromolecule.
+    For good simulation practices the macromolecule should be pre-equilibrated in water.
     Care must be taken for N-atomic probe molecules: The package does not identify
     a plane or something in the probe molecule. It just makes sure that at every
     interaction site the probe faces the macromolecule with the same orientation.
@@ -264,10 +267,12 @@ def sasa(
 
     Parameters
     ----------
+    gro_file : str
+        Name of the gromacs file of the macromolecule
     data_file : str
         Name of the LAMMPS data file of the macromolecule
     mol_file : str
-        Name of the LAMMPS mol file to use as probe of the SAS
+        Name of the LAMMPS mol file to use as probe of the SAS (solvent acessible surface)
     ff_str : str
         Force field parameters to provide to LAMMPS. See examples directory
         https://docs.lammps.org/pair_style.html
