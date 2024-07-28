@@ -89,8 +89,8 @@ class Sasa:
 
         ## residue analysis
         residuelist(self.path, self.gro_file)
-        residue_names, result = residue_analysis(self.path, "spec.xyz", "residuelist.txt")
-        residue_analysis_plot(self.path, residue_names, result)
+        result = residue_analysis(self.path, "spec.xyz", "residuelist.txt")
+        residue_analysis_plot(self.path, result)
 
         return 0
 
