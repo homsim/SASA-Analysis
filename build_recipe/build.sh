@@ -1,2 +1,2 @@
-pip install .
-#python3 setup.py install
+#pip install .
+python3 setup.py install

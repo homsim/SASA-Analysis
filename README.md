@@ -1,45 +1,30 @@
 # Build and Install
 
-The package requires the `vmd-python` package, which is only distributed in the `conda-forge` channel. For this reason, this package has to be installed in a conda environment as its dependencies cannot be installed from PyPI alone. 
-This package will be build locally and then imported in a new conda environment that is created from the `env.yml` file. This is only supposed to be a temporary solution.
+The package requires the `vmd-python` package, which is only distributed in the `conda-forge` channel and unfortunately has the restriction of only working with `python<3.12.0a0`. For this reason, this package has to be installed in a conda environment as its dependencies cannot be installed from PyPI alone. 
+This package will be build locally and can then be imported.
 
 ## Environment
 
-First a conda environment has to be created from a `env.yml` file. The name of the resulting environment will be `sasa`, but can be changed by modifying the first line in the `env.yml` file:
+First, create a fresh conda-environment:
 
 ```bash
-conda env create -f env.yml
+conda create --name sasa --strict-channel-priority -c conda-forge python"<3.12.0a0" conda-build
 ```
+
+and activate it
 
 ```bash
-conda activate <env-name>    # <env-name>='sasa' or however you named the env
+conda activate sasa
 ```
+## Install dependencies and build
 
-## Build
-
-For building the package the created environment should now have all the
-depedencies.
-Make sure that atomatic uploading to the Anaconda repository is turned of (this is the default). Otherwise execute:
+In the `SASA-analysis` directory (NOT in the `build_recipe`) execute 
 
 ```bash
-conda config --set anaconda_upload false
+./build.sh
 ```
 
-In the `SASA-Analysis` directory execute:
-
-```bash
-conda build build_recipe/  
-```
-
-This builds the package locally in your `~/anaconda3/conda-bld`. 
-
-## Install
-
-It can then be installed as a package via
-
-```bash
-conda install --use-local sasa_lammps_multi 
-```
+This will install the dependencies, build the package locally and then install the package itself. Executing the script, might take a few minutes. When it is finished, the package is ready to use.
 
 # Usage
 

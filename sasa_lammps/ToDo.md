@@ -12,7 +12,8 @@
 - [X] Add a proper termination criterion to kill all running processes
 - [x] Terminate all processes if an error is detected in any of them (they all use the same in-file anyway)
 - [X] Add star-import for `sasa()`
-- [ ] Run simple benchmark on the MP performance
+- [ ] Remove the import option using the `env.yml`. Instead use 
+`conda install --strict-channel-priority -c https://conda.ovito.org -c conda-forge python"<3.12.0a0" ovito matplotlib numpy tqdm scipy pandas vmd-python`
 
 ## 1-atomic probe
 
