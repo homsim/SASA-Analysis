@@ -15,6 +15,8 @@ import signal
 
 from multiprocessing import Pool
 
+from sasa_lammps.gro2lammps import * 
+
 from sasa_lammps.helper import (
     _check_files,
     _count_atoms_in_mol,
@@ -28,12 +30,15 @@ from sasa_lammps.conversion import (
     _neighbor_finder,
 )
 
+from sasa_lammps.postprocessing import *
+
 KCAL_TO_EV = 0.04336  # convert kcal/mole to eV
 
 
 class Sasa:
     def __init__(
         self,
+        gro_file,
         data_file,
         mol_file,
         ff_str,
@@ -44,6 +49,7 @@ class Sasa:
         samples,
         path,
     ):
+        self.gro_file = gro_file
         self.data_file = data_file
         self.mol_file = mol_file
         self.ff_str = ff_str
@@ -56,6 +62,9 @@ class Sasa:
         self.parent_pid = os.getpid()   # pid of the parent process: needed to kill in case of an exception
 
     def _process(self):
+        # generate lammps data file
+        gro2lammps(self.path, "element_library.txt").convert(self.gro_file, self.data_file)
+
         # convert data file
         self.xyz_file = _convert_data_file(self.path, self.data_file)
 
@@ -71,6 +80,17 @@ class Sasa:
 
         # execute
         self._exec_lammps_iterations()
+
+        # postprocessing
+        ## atom analysis
+        neighbor = neighbor_analysis(self.path, "spec.xyz", self.gro_file)
+        result = atom_analysis(self.path, "spec.xyz", neighbor)
+        atom_analysis_plot(self.path, neighbor, result)
+
+        ## residue analysis
+        residuelist(self.path, self.gro_file)
+        result = residue_analysis(self.path, "spec.xyz", "residuelist.txt")
+        residue_analysis_plot(self.path, result)
 
         return 0
 
@@ -91,7 +111,7 @@ class Sasa:
         )  # need this only to get the total num of iterations
 
         # create final output file header and write to spec.xyz
-        header = f"{n_probes}\natom\tx\ty\tz\tres\tetot [eV]\teint [eV]\n"
+        header = f"{n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
         with open(os.path.join(self.path, "spec.xyz"), "w") as f:
             f.write(header)
 
@@ -223,6 +243,7 @@ class Sasa:
 
 
 def sasa(
+    gro_file,
     data_file,
     mol_file,
     ff_str,
@@ -234,7 +255,10 @@ def sasa(
     path=".",
 ):
     """
-    Run the SASA analysis on a given macromolecule using a given probe molecule.
+    Run the SASA (solvet accasible surface analysis) on a given macromolecule 
+    using a given probe molecule.
+    The package was designed to start from a gromacs file of the macromolecule.
+    For good simulation practices the macromolecule should be pre-equilibrated in water.
     Care must be taken for N-atomic probe molecules: The package does not identify
     a plane or something in the probe molecule. It just makes sure that at every
     interaction site the probe faces the macromolecule with the same orientation.
@@ -243,10 +267,12 @@ def sasa(
 
     Parameters
     ----------
+    gro_file : str
+        Name of the gromacs file of the macromolecule
     data_file : str
         Name of the LAMMPS data file of the macromolecule
     mol_file : str
-        Name of the LAMMPS mol file to use as probe of the SAS
+        Name of the LAMMPS mol file to use as probe of the SAS (solvent acessible surface)
     ff_str : str
         Force field parameters to provide to LAMMPS. See examples directory
         https://docs.lammps.org/pair_style.html
@@ -272,9 +298,11 @@ def sasa(
     -------
     None
 
+
     """
 
     S = Sasa(
+        gro_file,
         data_file,
         mol_file,
         ff_str,
