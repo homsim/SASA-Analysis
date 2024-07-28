@@ -13,9 +13,9 @@ requirements = [
 ]
 
 setup(
-    name="sasa_lammps_multi",
-    version=0.1,
-    install_requires=requirements,
-    include_package_data=True,
-    packages=find_packages(),
+    name = "sasa_lammps",
+    version = 0.2,
+    install_requires = requirements,
+    include_package_data = True,
+    packages = find_packages(),
 )
