@@ -26,6 +26,16 @@ def _check_files(path: str) -> None:
     return 0
 
 
+def _count_atoms_in_macromol(data_file: str) -> int:
+    """Count number of atoms in macro molecule file"""
+    with open(data_file, "r") as f:
+        for line in f:
+            if "atoms" in line:
+                atom_number = int(line.split()[0])
+                break
+
+    return atom_number
+
 def _count_atoms_in_mol(mol_file: str) -> int:
     """Count number of atoms in molecule file"""
     with open(mol_file, "r") as f:

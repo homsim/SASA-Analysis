@@ -31,16 +31,24 @@ read_data	    ${DataFile} # structure file
 molecule	    probe ${MolFile}
 create_atoms 	0 single ${sasaX} ${sasaY} ${sasaZ} mol probe 39802 &
                 rotate ${rotAng} ${rotVecX} ${rotVecY} ${rotVecZ} 
+############### Create groups
+group           protein id <= ${atom_number} #figure out how to do that
+group           probe_mol id > ${atom_number}
 ############### potential
 include			ff_params.dat
 ############### initial velocity
 velocity    	all set 0.0 0.0 0.0
+############### Freeze macro mol and fix probe mol
+fix             freeze protein setforce 0.0 0.0 0.0
+fix             fix probe_mol spring tether 50.0 ${sasaX} ${sasaY} ${sasaZ} 0.0
 ############### thermo and log
 thermo	    	1
 variable	    etotal equal etotal
 ############### dump
 include			dump_com.dat
 ############### run 
-run		        0 post no #number of iterations
+#run		        0 post no #number of iterations
+minimize 	1.0e-10 1.0e-10 1000 10000
+############### output
 variable        eint equal "(v_etotal - v_emol - v_eprob )*v_conv"
 print           "He    ${sasaX}    ${sasaY}    ${sasaZ}    ${res}    $(etotal*v_conv:%.3f)    $(v_eint:%.3f)" append spec.xyz screen no

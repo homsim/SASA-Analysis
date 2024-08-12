@@ -65,6 +65,9 @@ class Sasa:
         # generate lammps data file
         gro2lammps(self.path, "element_library.txt").convert(self.gro_file, self.data_file)
 
+        # run pre equilibration
+        self._run_pre_calc()
+
         # convert data file
         self.xyz_file = _convert_data_file(self.path, self.data_file)
 
@@ -94,10 +97,8 @@ class Sasa:
 
         return 0
 
-    def _exec_lammps_iterations(self) -> None:
-        """Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe"""
-
-        # remove existing files and copy input templates...
+    def _run_pre_calc(self) -> None:
+                # remove existing files and copy input templates...
         _check_files(self.path)
 
         # write ff_str and dump_str to files for LAMMPS to read in
@@ -109,6 +110,15 @@ class Sasa:
         n_probes = len(
             self.sasa_positions
         )  # need this only to get the total num of iterations
+
+    def _exec_lammps_iterations(self) -> None:
+        """Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe"""
+
+        # remove existing files and copy input templates...
+        #_check_files(self.path)
+
+        # Count atoms in macro molecule
+        atom_number = _count_atoms_in_macromol(os.path.join(self.path, self.data_file))
 
         # create final output file header and write to spec.xyz
         header = f"{n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
@@ -180,6 +190,7 @@ class Sasa:
         in_file: str,
         pos: float,
         rot: list[float, float, float, float],
+        atom_number: float,
         res: int,
         e_mol: float,
         e_prob: float,
@@ -225,7 +236,9 @@ class Sasa:
             -var sasaX {pos[0]:.3f} -var sasaY {pos[1]:.3f} \
             -var sasaZ {pos[2]:.3f} -var rotAng {rot[0]:.3f} \
             -var rotVecX {rot[1]:.3f} -var rotVecY {rot[2]:.3f} \
-            -var rotVecZ {rot[3]:.3f} -var res {res} -var emol {e_mol:.3f} \
+            -var rotVecZ {rot[3]:.3f} \
+            -var atom_number {:.3f} -var atom_number {:.3f}
+            -var res {res} -var emol {e_mol:.3f} \
             -var eprob {e_prob:.3f} -var conv {KCAL_TO_EV} \ 
         """
 
