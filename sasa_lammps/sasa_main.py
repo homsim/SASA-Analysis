@@ -20,6 +20,7 @@ from sasa_lammps.gro2lammps import *
 from sasa_lammps.helper import (
     _check_files,
     _count_atoms_in_mol,
+    _count_atoms_in_macromol,
     _write_params_file,
     _read_last_two,
 )
