@@ -237,7 +237,7 @@ class Sasa:
             -var sasaZ {pos[2]:.3f} -var rotAng {rot[0]:.3f} \
             -var rotVecX {rot[1]:.3f} -var rotVecY {rot[2]:.3f} \
             -var rotVecZ {rot[3]:.3f} \
-            -var atom_number {atom_number:.3f} -var atom_number {:.3f}
+            -var atom_number {atom_number:.3f} \
             -var res {res} -var emol {e_mol:.3f} \
             -var eprob {e_prob:.3f} -var conv {KCAL_TO_EV} \ 
         """
