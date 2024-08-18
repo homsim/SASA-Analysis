@@ -37,3 +37,7 @@ create_atoms 	0 single ${sasaX} ${sasaY} ${sasaZ} mol probe 39802 &
 ###############
 #run             0
 minimize        1.0e-4 1.0e-6 1000 10000
+# Note: 
+# We compare all the configurations to a minimized probe-molecule-energy, but the minimized probe-structure is NOT written to a file to be later
+# imported in the SASA-run. There the probe-structure before minimization is used. We figured that this is not necessary, because the fix spring 
+# in the in.template changes the probe-molecule configuration anyway.
