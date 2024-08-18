@@ -33,8 +33,7 @@ from sasa_lammps.conversion import (
 
 from sasa_lammps.postprocessing import *
 
-KCAL_TO_EV = 0.04336  # convert kcal/mole to eV
-
+from sasa_lammps.constants import *
 
 class Sasa:
     def __init__(
@@ -64,10 +63,17 @@ class Sasa:
 
     def _process(self):
         # generate lammps data file
-        gro2lammps(self.path, "element_library.txt").convert(self.gro_file, self.data_file)
+        gro2lammps(self.path, ELEM_LIBRARY).convert(self.gro_file, self.data_file)
 
-        # run pre equilibration
-        self._run_pre_calc()
+        # remove existing files and copy input templates...
+        _check_files(self.path)
+
+        # write ff_str and dump_str to files for LAMMPS to read in
+        _write_params_file(self.ff_str, FF_PARAMS)
+        _write_params_file(self.dump_str, DUMP_COM)
+
+        # get the energies for the isolated macro- and probe molecule, respectively
+        e_mol, e_prob = self._pre_calc()
 
         # convert data file
         self.xyz_file = _convert_data_file(self.path, self.data_file)
@@ -76,6 +82,7 @@ class Sasa:
         self.sasa_positions = _create_sasa_xyz(
             self.path, self.xyz_file, self.srad, self.samples
         )
+        n_probes = len(self.sasa_positions)  # need this only to get the total num of iterations
 
         # build neigbor list
         self.neighbors = _neighbor_finder(
@@ -83,47 +90,53 @@ class Sasa:
         )
 
         # execute
-        self._exec_lammps_iterations()
+        self._exec_lammps_iterations(n_probes, e_mol, e_prob)
 
         # postprocessing
         ## atom analysis
-        neighbor = neighbor_analysis(self.path, "spec.xyz", self.gro_file)
-        result = atom_analysis(self.path, "spec.xyz", neighbor)
+        neighbor = neighbor_analysis(self.path, SPEC, self.gro_file)
+        result = atom_analysis(self.path, SPEC, neighbor)
         atom_analysis_plot(self.path, neighbor, result)
 
         ## residue analysis
         residuelist(self.path, self.gro_file)
-        result = residue_analysis(self.path, "spec.xyz", "residuelist.txt")
+        result = residue_analysis(self.path, SPEC, RESIDUELIST)
         residue_analysis_plot(self.path, result)
 
         return 0
 
-    def _run_pre_calc(self) -> None:
-                # remove existing files and copy input templates...
-        _check_files(self.path)
+    def _pre_calc(self) -> tuple[float, float]:
+        """
+        Do two pre-runs in LAMMPS: One of the isolated macromolecule and one of the isolated probe molecule
 
-        # write ff_str and dump_str to files for LAMMPS to read in
-        _write_params_file(self.ff_str, "ff_params.dat")
-        _write_params_file(self.dump_str, "dump_com.dat")
+        Returns
+        -------
+        e_mol : float
+            Energy of the macro molecule in kcal/mole
+        e_prob : float
+            Energy of the probe molecule in kcal/mole
 
-        # get the energies for the isolated macro- and probe molecule, respectively
-        e_mol, e_prob = self._pre_calc()
-        n_probes = len(
-            self.sasa_positions
-        )  # need this only to get the total num of iterations
+        """
 
-    def _exec_lammps_iterations(self) -> None:
+        self._run_lmp(
+            IN_PRE,
+            [0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0]
+        )
+
+        e_mol, e_prob = _read_last_two(self.path, "etot")
+
+        return e_mol, e_prob
+
+    def _exec_lammps_iterations(self, n_probes: int, e_mol: float, e_prob: float) -> None:
         """Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe"""
-
-        # remove existing files and copy input templates...
-        #_check_files(self.path)
 
         # Count atoms in macro molecule
         atom_number = _count_atoms_in_macromol(os.path.join(self.path, self.data_file))
 
         # create final output file header and write to spec.xyz
         header = f"{n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
-        with open(os.path.join(self.path, "spec.xyz"), "w") as f:
+        with open(os.path.join(self.path, SPEC), "w") as f:
             f.write(header)
 
         # rotate the probe molecule for n-atomic probes (n > 1)
@@ -139,7 +152,7 @@ class Sasa:
         # create iterable for multiprocessing.Pool.starmap()
         iters = [self.sasa_positions, self.neighbors["res"], self.rotations]
         run_iterable = [
-            ["in.template", pos, rot, res, e_mol, e_prob]
+            [IN_TEMPLATE, pos, rot, atom_number, res, e_mol, e_prob]
             for pos, res, rot in zip(*iters)
         ]
 
@@ -160,41 +173,15 @@ class Sasa:
 
         return 0
 
-    def _pre_calc(self) -> tuple[float, float]:
-        """
-        Do two pre-runs in LAMMPS: One of the isolated macromolecule and one of the isolated probe molecule
-
-        Returns
-        -------
-        e_mol : float
-            Energy of the macro molecule in kcal/mole
-        e_prob : float
-            Energy of the probe molecule in kcal/mole
-
-        """
-
-        self._run_lmp(
-            "in.pre",
-            [0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            0,
-            0.0,
-            0.0,
-        )
-
-        e_mol, e_prob = _read_last_two(self.path, "etot")
-
-        return e_mol, e_prob
-
     def _run_lmp(
         self,
         in_file: str,
-        pos: float,
+        pos: list[float, float, float],
         rot: list[float, float, float, float],
-        atom_number: float,
-        res: int,
-        e_mol: float,
-        e_prob: float,
+        atom_number = 0,
+        res = 0,
+        e_mol = 0.0,
+        e_prob = 0.0,
     ) -> None:
         """
         Run LAMMPS by running a subprocess. May not be the most elegant way,
@@ -206,10 +193,6 @@ class Sasa:
         ----------
         in_file : str
             Name of the LAMMPS input file
-        iterat : int
-            Number of iteration
-        max_iterat : int
-            Max Number of iterations
         pos : list
             x, y, z position list of the SAS positions
         rot : list
@@ -218,6 +201,8 @@ class Sasa:
             rot[1]: X-component of rotation vector
             rot[2]: Y-component of rotation vector
             rot[3]: Z-component of rotation vector
+        atom_number: int
+            The number of atoms in the macromolecule
         res : int
             Residue ID
         e_mol : float
@@ -238,7 +223,7 @@ class Sasa:
             -var sasaZ {pos[2]:.3f} -var rotAng {rot[0]:.3f} \
             -var rotVecX {rot[1]:.3f} -var rotVecY {rot[2]:.3f} \
             -var rotVecZ {rot[3]:.3f} \
-            -var atom_number {atom_number:.3f} \
+            -var atom_number {atom_number:d} \
             -var res {res} -var emol {e_mol:.3f} \
             -var eprob {e_prob:.3f} -var conv {KCAL_TO_EV} \ 
         """

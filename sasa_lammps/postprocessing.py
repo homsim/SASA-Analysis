@@ -167,6 +167,7 @@ def residue_analysis_plot(path, result):
         'GLU': '#11963b',
         'GLY': '#051155',
         'HEM': '#4f02ec',
+        'HIS': 'k', 
         'HISD': '#2d69cb',
         'HISE': '#00a6ee',
         'HISH': '#6febff',
@@ -181,7 +182,7 @@ def residue_analysis_plot(path, result):
         'THR': '#acbe9c',
         'TRP': '#827c70',
         'TYR': '#5a3b1c',
-        'VAL': '#ae6507'}
+        'VAL': '#ae6507'}   # color code for 'HIS' needs to be changed
     #plot attack amount vs residue
     fig, ax = plt.subplots(1)
     fig.set_size_inches(10, 5)
