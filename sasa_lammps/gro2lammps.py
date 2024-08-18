@@ -25,7 +25,7 @@ class gro2lammps:
         self.path = path
         self.di = pd.read_csv(os.path.join(path, element_library), sep='\s+')
     
-    def __delete_solvent(self, infile, pipeline):
+    def _delete_solvent(self, infile, pipeline):
         # Find the place to cut
         with open(infile, "r") as rf:
             for i,line in enumerate(rf):
@@ -38,16 +38,16 @@ class gro2lammps:
         #  UPO_del_Solv - Delete selected
         pipeline.modifiers.append(DeleteSelectedModifier())
 
-    def __change_ParticleTypes(self, frame, data):
+    def _change_particleTypes(self, frame, data):
         types = data.particles_.particle_types_
         for gro_PT, lammps_PT in zip(self.di['gromacs_ParticleType'], self.di['lammps_ParticleType']):
             types[types == gro_PT ] = lammps_PT
     
-    def __change_ParticleIDs(self, frame, data):
+    def _change_particleIDs(self, frame, data):
         for i,item in enumerate(self.di['gromacs_ParticleType']):
             data.particles_.particle_types_.type_by_id_(item).id = i+1
     
-    def __change_Masses(self, frame, data):
+    def _change_masses(self, frame, data):
         for lammps_PT, et, mass in zip(self.di['lammps_ParticleType'], self.di['ElementType'], self.di['mass']):
             data.particles_.particle_types_.type_by_id_(lammps_PT).name = et
             data.particles_.particle_types_.type_by_id_(lammps_PT).mass = mass
@@ -57,16 +57,16 @@ class gro2lammps:
         pipeline = import_file(os.path.join(self.path,infile))
 
         # Delete solvent and ions
-        self.__delete_solvent(infile, pipeline)
+        self._delete_solvent(infile, pipeline)
 
         # Change Particle IDs
-        pipeline.modifiers.append(self.__change_ParticleTypes)
+        pipeline.modifiers.append(self._change_particleTypes)
 
         # Change Particle IDs
-        pipeline.modifiers.append(self.__change_ParticleIDs)
+        pipeline.modifiers.append(self._change_particleIDs)
 
         #Change Masses and Names
-        pipeline.modifiers.append(self.__change_Masses)
+        pipeline.modifiers.append(self._change_masses)
 
         # Store residue informations in the Molecule Identifier 
         pipeline.modifiers.append(ComputePropertyModifier(
