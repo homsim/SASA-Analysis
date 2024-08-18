@@ -155,7 +155,7 @@ def residue_analysis(path, SASA_outfile, residuelist):
 
 def residue_analysis_plot(path, result):
     def residue_analysis_total_plot(path, result):
-    result = pd.DataFrame(result).sort_values('labels', ascending=True)
+        result = pd.DataFrame(result).sort_values('labels', ascending=True)
     # create color list with fixed color for each residue
     colors={'ALA': '#d6a090',
         'ARG': '#fe3b1e',
