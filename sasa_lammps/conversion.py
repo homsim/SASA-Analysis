@@ -4,6 +4,8 @@ from ovito.io import import_file, export_file
 from ovito.data import NearestNeighborFinder
 from vmd import atomsel, molecule
 
+from sasa_lammps.constants import SASAXYZ
+
 
 def _convert_data_file(path, data_file):
     """Use the Ovito API to convert LAMMPS data file to xyz"""
@@ -50,7 +52,7 @@ def _create_sasa_xyz(path, xyz_file, srad, samples):
         N is loosely determined by 'samples' argument.
 
     """
-    export_file = "sasa.xyz"
+    export_file = SASAXYZ
     mol = molecule.load("xyz", os.path.join(path, xyz_file))
     sel = atomsel()
 

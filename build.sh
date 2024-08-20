@@ -7,6 +7,6 @@
 # install the dependencies
 conda install --strict-channel-priority -c https://conda.ovito.org -c conda-forge ovito matplotlib numpy tqdm scipy pandas vmd-python -y
 # build the package locally
-conda build build_recipe/ -y
+conda build build_recipe/
 # install the package into the current env
 conda install --use-local sasa_lammps -y

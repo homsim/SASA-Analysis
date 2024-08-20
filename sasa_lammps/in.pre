@@ -8,13 +8,13 @@
 ###############################################################################
 ###############################################################################
 
-units		real # define unit sys -> real is vital for reax
-atom_style	full # reax needs charge or full
+units		    real # reax need real units
+atom_style	    full # reax needs charge or full
 dimension       3
 boundary        p p p
-############### read data
-read_data	${DataFile} # structure file
-############### create plasma molecules
+############### create the macro molecule
+read_data	    ${DataFile} # structure file
+############### read the probe molecule
 molecule	    probe ${MolFile}
 ############### potential
 include			ff_params.dat
@@ -24,14 +24,23 @@ velocity    	all set 0.0 0.0 0.0
 thermo	    	1
 variable	    etotal equal etotal
 log             log.pre
-################ print
-fix	        	etot all print 1 "${etotal}" append etot screen no title "Total energy in kcal/mole"
-############### run 
-run		0
-###############
+############### minimize macro molecule
+minimize        1.0e-4 1.0e-6 1000 10000
+write_data	    ${DataFile}
+############### print
+print           "Total energy in kcal/mole" file etot screen no
+print           "${etotal}" append etot screen no
+############### create the probe molecule
+reset_timestep  0
 delete_atoms    group all
 create_atoms 	0 single ${sasaX} ${sasaY} ${sasaZ} mol probe 39802 &
                 rotate ${rotAng} ${rotVecX} ${rotVecY} ${rotVecZ} 
-###############
-run             0
+############### minimize probe molecule
+minimize        1.0e-4 1.0e-6 1000 10000
+############### print
+print           "${etotal}" append etot screen no
 
+# Note: 
+# We compare all the configurations to a minimized probe-molecule-energy, but the minimized probe-structure is NOT written to a file to be later
+# imported in the SASA-run. There the probe-structure before minimization is used. We figured that this is not necessary, because the fix spring 
+# in the in.template changes the probe-molecule configuration anyway.

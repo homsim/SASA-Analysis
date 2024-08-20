@@ -2,6 +2,8 @@ import os
 import sasa_lammps
 import shutil
 
+from sasa_lammps.constants import *
+
 
 def _check_files(path: str) -> None:
     """
@@ -10,7 +12,7 @@ def _check_files(path: str) -> None:
     """
     fs = os.listdir(path)
 
-    to_rm = ["etot", "traj.lmp", "thermolog1", "spec.xyz"]
+    to_rm = [ETOT, TRAJ, THERMOLOG, SPEC]
     for f in to_rm:
         if f in fs:
             print(f"{f} file already exists. Will be overwritten...")
@@ -18,13 +20,23 @@ def _check_files(path: str) -> None:
 
     # copy the LAMMPS input template to the working dir
     module_dir = os.path.dirname(sasa_lammps.__file__)
-    shutil.copy(os.path.join(module_dir, "in.pre"), os.path.join(path, "in.pre"))
+    shutil.copy(os.path.join(module_dir, IN_PRE), os.path.join(path, IN_PRE))
     shutil.copy(
-        os.path.join(module_dir, "in.template"), os.path.join(path, "in.template")
+        os.path.join(module_dir, IN_TEMPLATE), os.path.join(path, IN_TEMPLATE)
     )
 
     return 0
 
+
+def _count_atoms_in_macromol(data_file: str) -> int:
+    """Count number of atoms in macro molecule file"""
+    with open(data_file, "r") as f:
+        for line in f:
+            if "atoms" in line:
+                atom_number = int(line.split()[0])
+                break
+
+    return atom_number
 
 def _count_atoms_in_mol(mol_file: str) -> int:
     """Count number of atoms in molecule file"""
