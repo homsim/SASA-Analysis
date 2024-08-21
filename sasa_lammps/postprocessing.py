@@ -125,7 +125,7 @@ def residue_analysis(path, SASA_outfile, residuelist):
     # sort by lowest energy and identify and remove dublicates of the same residue
     sort= df.sort_values('eint/eV', ascending=True).reset_index(drop=True)
     # only take the 15 lowest
-    emin=sort.drop_duplicates(subset=['res']).iloc[0:15]
+    emin=sort.drop_duplicates(subset=['res']).iloc[0:30]
     for item in emin['res']:
         loc= res.isin([item]).any(axis=1).idxmax()
         resn = res.iloc[loc]['ResType']
@@ -190,7 +190,7 @@ def residue_analysis_plot(path, result):
     ax.bar(result['labels'],result['total'],edgecolor='black', 
             color=[colors[key] for key in result['labels']])
     #layout
-    ax.set_ylabel('Interaction probability / %',fontsize=18)
+    ax.set_ylabel('Total interactions',fontsize=18)
     ax.set_xlabel('Residue',fontsize=18)
     ## increase line thickness box and ticks      
     for axis in ['top','bottom','left','right']:
