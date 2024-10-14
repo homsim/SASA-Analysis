@@ -135,7 +135,6 @@ def residue_analysis(path, SASA_outfile, residuelist):
     res_names=res['ResType'].reset_index(drop=True)
     res_names = res_names.value_counts()
     count = emin['res'].value_counts()
-    
     # get normalized results, attack amount/amount of residue
     result = {'labels': [], 'total':[], 'percent': [],}
     for item in count.index:
@@ -154,8 +153,7 @@ def residue_analysis(path, SASA_outfile, residuelist):
     '''
 
 def residue_analysis_plot(path, result):
-    def residue_analysis_total_plot(path, result):
-        result = pd.DataFrame(result).sort_values('labels', ascending=True)
+    result = pd.DataFrame(result).sort_values('labels', ascending=True)
     # create color list with fixed color for each residue
     colors={'ALA': '#d6a090',
         'ARG': '#fe3b1e',
@@ -182,7 +180,7 @@ def residue_analysis_plot(path, result):
         'THR': '#acbe9c',
         'TRP': '#827c70',
         'TYR': '#5a3b1c',
-        'VAL': '#ae6507'}   # color code for 'HIS' needs to be changed
+        'VAL': '#ae6507'}   
     #plot attack amount vs residue
     fig, ax = plt.subplots(1)
     fig.set_size_inches(10, 5)
@@ -190,12 +188,14 @@ def residue_analysis_plot(path, result):
     ax.bar(result['labels'],result['total'],edgecolor='black', 
             color=[colors[key] for key in result['labels']])
     #layout
-    ax.set_ylabel('Total interactions',fontsize=18)
-    ax.set_xlabel('Residue',fontsize=18)
+    ax.set_ylabel('$n$ total interactions',fontsize=18)
+    ax.set_xlabel('residue',fontsize=18)
     ## increase line thickness box and ticks      
     for axis in ['top','bottom','left','right']:
         ax.spines[axis].set_linewidth(1.5)
     ax.tick_params(labelsize=16, width=1.5, length=6, bottom=True, left=True, right=True,)
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(45)
     ## minor ticks
     #ax.minorticks_on()
     ax.tick_params(which='minor',width=1, length=6, right=True,)
