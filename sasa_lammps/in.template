@@ -51,4 +51,5 @@ include			dump_com.dat
 minimize 	1.0e-10 1.0e-10 1000 10000
 ############### output
 variable        eint equal "(v_etotal - v_emol - v_eprob )*v_conv"
-print           "He    ${sasaX}    ${sasaY}    ${sasaZ}    ${res}    $(etotal*v_conv:%.3f)    $(v_eint:%.3f)" append spec.xyz screen no
+variable        etot equal "(v_etotal)*0.04336"
+print           "He    ${sasaX}    ${sasaY}    ${sasaZ}    ${res}    $(v_etot:%.3f)    $(v_eint:%.3f)" append spec.xyz screen no
