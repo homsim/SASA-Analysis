@@ -65,15 +65,15 @@ The package really only has one usable method `sasa_lammps.sasa()`:
     lammps_exe : str, optional
         Full path to the LAMMPS executable. If not provided, will automatically
         download and use pre-built LAMMPS binaries from https://download.lammps.org/static/
-    n_procs : int
+    n_procs : int, optional
         Number of LAMMPS instances to run in parallel (Default: 1)
-    srad : float
+    srad : float, optional
         Probe radius: Effectively a scaling factor for the vdW radii
         (Default: 1.4, which is the most commonly used because its approx. the
         radius of water)
-    samples : int
+    samples : int, optional
         Maximum points on the atomic vdW sphere to generate per atom (Default: 100)
-    path : str
+    path : str, optional
         Execution path (Default: .)
 
     Returns
