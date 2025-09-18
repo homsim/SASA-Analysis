@@ -62,8 +62,9 @@ The package really only has one usable method `sasa_lammps.sasa()`:
     dump_str : str
         Dump command to provide to LAMMPS. See examples directory
         https://docs.lammps.org/dump.html
-    lammps_exe : str
-        Full path to the LAMMPS executable
+    lammps_exe : str, optional
+        Full path to the LAMMPS executable. If not provided, will automatically
+        download and use pre-built LAMMPS binaries from https://download.lammps.org/static/
     n_procs : int
         Number of LAMMPS instances to run in parallel (Default: 1)
     srad : float
@@ -103,8 +104,8 @@ gro_file = "lysozyme_part.gro"
 data_file = "data.lysozyme_part"
 # Import the molecule file (example also contains h2o2.mol)
 mol_file = "h.mol"
-# Path to you lammps executable
-lammps_exe =  "/opt/lammps-23Jun2022/src/lmp_mpi"
+# Path to your lammps executable (optional - will auto-download if not provided)
+# lammps_exe =  "/opt/lammps-23Jun2022/src/lmp_mpi"
 # Specify the force filed parameters, in this case reaxFF parameters*
 ff_str = """
 pair_style      reaxff NULL safezone 1.6 mincap 100 minhbonds 150
@@ -117,6 +118,8 @@ dump_str = """ """
 dump            traj all custom 1 traj.lmp id mol type element x y z vx vy vz q 
 dump_modify     traj append yes element H C N O S 
 """
-# Run sasa
-sasa(gro_file, data_file, mol_file, ff_str, dump_str, lammps_exe)
+# Run sasa (lammps_exe is now optional)
+sasa(gro_file, data_file, mol_file, ff_str, dump_str)
+# Or with custom LAMMPS executable:
+# sasa(gro_file, data_file, mol_file, ff_str, dump_str, lammps_exe)
 ```
