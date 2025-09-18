@@ -34,6 +34,7 @@ from sasa_lammps.conversion import (
 from sasa_lammps.postprocessing import *
 
 from sasa_lammps.constants import *
+from sasa_lammps.lammps_manager import get_lammps_executable
 
 class Sasa:
     def __init__(
@@ -43,18 +44,18 @@ class Sasa:
         mol_file,
         ff_str,
         dump_str,
-        lammps_exe,
-        n_procs,
-        srad,
-        samples,
-        path,
+        lammps_exe=None,
+        n_procs=1,
+        srad=1.4,
+        samples=100,
+        path=".",
     ):
         self.gro_file = gro_file
         self.data_file = data_file
         self.mol_file = mol_file
         self.ff_str = ff_str
         self.dump_str = dump_str
-        self.lammps_exe = lammps_exe
+        self.lammps_exe = lammps_exe if lammps_exe is not None else get_lammps_executable()
         self.n_procs = n_procs
         self.srad = srad
         self.samples = samples
@@ -225,7 +226,7 @@ class Sasa:
             -var rotVecZ {rot[3]:.3f} \
             -var atom_number {atom_number:d} \
             -var res {res} -var emol {e_mol:.3f} \
-            -var eprob {e_prob:.3f} -var conv {KCAL_TO_EV} \ 
+            -var eprob {e_prob:.3f} -var conv {KCAL_TO_EV}
         """
 
         try:
@@ -247,7 +248,7 @@ def sasa(
     mol_file,
     ff_str,
     dump_str,
-    lammps_exe,
+    lammps_exe=None,
     n_procs=1,
     srad=1.4,
     samples=100,
@@ -280,8 +281,9 @@ def sasa(
     dump_str : str
         Dump command to provide to LAMMPS. See examples directory
         https://docs.lammps.org/dump.html
-    lammps_exe : str
-        Full path to the LAMMPS executable
+    lammps_exe : str, optional
+        Full path to the LAMMPS executable. If not provided, will automatically
+        download and use pre-built LAMMPS binaries from https://download.lammps.org/static/
     n_procs : int
         Number of LAMMPS instances to run in parallel (Default: 1)
     srad : float
