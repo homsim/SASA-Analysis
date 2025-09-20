@@ -1,5 +1,126 @@
 
-## Testing Strategy for SASA Implementation
+# Testing Strategy for SASA C Extension
+
+This document outlines the testing strategy for validating our C extension implementation against the VMD reference data.
+
+## Overview
+
+Our testing approach focuses on ensuring accuracy and robustness of the C extension that will replace VMD-python in the SASA calculation pipeline. We have VMD reference data generated from VMD-python 3.1.6 using the lysozyme example data.
+
+## Refined Testing Strategy
+
+### 1. Unit Tests for Core C Components
+
+#### Sphere Point Generation
+```python
+def test_sphere_point_generation():
+    # Test uniform distribution on unit sphere
+    # Verify points have magnitude ~1.0
+    # Check reproducibility with fixed seed
+    # Test different sample counts (100, 500)
+```
+
+#### Neighbor List Construction
+```python
+def test_neighbor_lists():
+    # Test spatial grid performance vs brute force
+    # Verify all neighbors found within cutoff
+    # Test with lysozyme data
+```
+
+#### Surface Point Testing
+```python
+def test_surface_point_burial():
+    # Test simple 2-atom cases with known results
+    # Verify burial detection logic
+    # Test probe radius effects
+```
+
+### 2. Integration Tests Against VMD Reference
+
+#### Exact Reproduction Tests
+```python
+def test_vmd_reproduction():
+    # Load test/resources/vmd_reference_data.json
+    # For each test case, run our C extension
+    # Compare: total SASA area (±0.5%)
+    # Compare: number of surface points (±2%)
+    # Compare: surface point distributions (statistical tests)
+```
+
+#### Parameter Sweep Tests
+```python
+def test_parameter_effects():
+    # Test srad: [1.0, 1.4, 2.0]
+    # Test samples: [100, 500]
+    # Verify expected trends (smaller probe = larger area)
+    # Check convergence behavior
+```
+
+### 3. Error Handling Tests
+
+```python
+def test_error_conditions():
+    # Invalid input arrays
+    # Negative radii
+    # Zero/negative sample counts
+    # Memory allocation failures
+```
+
+### 4. System Integration Tests
+
+#### End-to-End Workflow
+```python
+def test_sasa_lammps_integration():
+    # Use example/lysozyme_part.gro
+    # Run conversion.py with C extension
+    # Compare final results with VMD version
+    # Verify file outputs match expected format
+```
+
+### 5. Numerical Stability Tests
+
+```python
+def test_numerical_stability():
+    # Repeated runs with same input
+    # Different random seeds
+    # Verify reproducibility when seed is fixed
+```
+
+## VMD Reference Data
+
+Located in `test/resources/vmd_reference_data.json`, containing:
+- **lysozyme_small**: srad=1.4, samples=100 → 29,763 surface points, SASA=26,671.83 Ų
+- **lysozyme_medium**: srad=1.4, samples=500 → 148,877 surface points, SASA=26,675.64 Ų
+- **lysozyme_small_probe**: srad=1.0, samples=100 → 55,963 surface points, SASA=37,469.79 Ų
+- **lysozyme_large_probe**: srad=2.0, samples=100 → 17,631 surface points, SASA=23,644.26 Ų
+
+## Success Criteria
+
+### Accuracy Requirements
+- **Total SASA area**: ±0.5% vs VMD
+- **Surface point count**: ±2% vs VMD
+- **Individual surface points**: Within statistical variance
+
+### Robustness Requirements
+- Handle all valid input ranges
+- Graceful error handling
+- No memory leaks
+
+## File Structure
+
+```
+test/
+├── generate_vmd_reference.py    # VMD reference data generation
+├── test_sasa_extension.py       # Main test suite
+└── resources/                   # Test data
+    ├── vmd_reference_data.json  # VMD reference results
+    └── test_lysozyme_*.xyz       # Test molecule files
+```
+
+---
+
+## Testing Examples for SASA Implementation
 
 ### 1. **Fixed Seed Reference Tests**
 
