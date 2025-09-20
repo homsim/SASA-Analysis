@@ -131,3 +131,69 @@ sasa_area, sasa_points = sasa_ext.compute_sasa(
 - NumPy C API (for array handling)
 
 This implementation would be roughly **5-10% the size** of the full VMD codebase while providing exactly the functionality needed.
+
+## Implementation Plan to Remove VMD Dependency and Conda Requirement
+
+### Current Dependencies Analysis ✅
+- **VMD usage**: Only in `conversion.py:59` - `sel.sasa(srad=srad, samples=samples, points=True)`
+- **Other dependencies**:
+  - Ovito (used in conversion.py, gro2lammps.py, postprocessing.py)
+  - Standard Python packages (numpy, tqdm, multiprocessing)
+  - LAMMPS (external executable)
+
+### Implementation Plan
+
+#### Phase 1: Create Minimal SASA C Extension
+1. **Design C extension architecture** 📋
+   - Core SASA computation using Monte Carlo sphere sampling
+   - Grid-based neighbor search for performance
+   - Reproducible random number generation
+   - NumPy array interface for Python integration
+
+2. **Implement core SASA algorithm in C** 📋
+   - ~150 lines for Monte Carlo SASA calculation
+   - ~100 lines for spatial grid optimization
+   - ~50 lines for sphere point generation
+   - ~100 lines for Python bindings
+
+3. **Create Python C extension interface** 📋
+   - Replace `sel.sasa()` call with `sasa_ext.compute_sasa()`
+   - Return both total area and surface point coordinates
+   - Maintain same API: `(area, points) = compute_sasa(coords, radii, srad, samples)`
+
+#### Phase 2: Replace VMD in Codebase
+4. **Replace VMD calls in conversion.py** 📋
+   - Modify `_create_sasa_xyz()` to use C extension
+   - Extract atom coordinates and radii from xyz file
+   - Maintain identical output format and behavior
+
+#### Phase 3: Remove Conda Dependency
+5. **Migrate from conda to pip-only dependencies** 📋
+   - Check if Ovito is available via pip
+   - Update setup.py with all required dependencies
+   - Create requirements.txt for pip installation
+   - Test installation in clean Python environment
+
+#### Phase 4: Finalization
+6. **Update build system and documentation** 📋
+   - Add C extension compilation to setup.py
+   - Update installation instructions
+   - Remove references to conda/VMD from docs
+
+7. **Test and validate SASA calculation accuracy** 📋
+   - Compare C extension results with VMD output
+   - Ensure <1% accuracy difference
+   - Performance benchmarks
+   - Integration tests
+
+### Expected Outcomes
+- **Size reduction**: ~95% smaller than full VMD dependency
+- **Installation**: Single `pip install` command
+- **Performance**: Likely faster due to optimized C code
+- **Maintenance**: Much simpler, self-contained codebase
+
+The core replacement involves ~400 lines of C code vs the massive VMD codebase, focusing only on the Monte Carlo SASA algorithm you actually use.
+
+## Testing
+
+The replacement shall be tested against the outcome of the existing VMD-implementation. For more informations on that see @TESTING.md
