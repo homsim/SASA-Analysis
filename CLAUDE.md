@@ -1,4 +1,7 @@
 - The code in this directory does some scientific calculations by using the so called solvent-accessible surface analysis (SASA). The directory @vmd-python/ is a library that I cloned here for you to see its source code. I use this library by installing in a conda environment. What I want to do eventually is to remove the need for this library. I want to do this because it is very bloated for my purposes. In my code (which you find in @sasa_lammps/ ) I really only use one major class and function of vmd-python, namely the calculation a sasa() on an AtomSel object (atom selection). I would like to implement this as a C extension and use it in python, because I expect it be too CPU-heavy to implement it in python. First, try to understand, how the code from vmd-python works. You can do this by tracking back how I use it in @sasa_lammps/conversion.py in the method _create_sasa_xyz()
+- The code shall be run in a python environment (not a conda environment!)
+- Always ensure that the tests actually make sense. Re-check the tests often to see logic errors or see if conditions are skipped in order to pass the test.
+- Tests need to pass in order for the implementation to be acceptable.
 
 ## SASA Algorithm Analysis (from vmd-python)
 
