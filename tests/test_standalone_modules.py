@@ -118,23 +118,6 @@ O 0.0 0.0 1.0
         with pytest.raises(ValueError):
             parse_xyz_file(str(bad_coords_file))
 
-    def test_sasa_extension_availability_check(self, sasa_core_module):
-        """Test that the module properly detects SASA extension availability."""
-        # Check if SASA_EXT_AVAILABLE is defined
-        assert hasattr(sasa_core_module, 'SASA_EXT_AVAILABLE')
-        availability = sasa_core_module.SASA_EXT_AVAILABLE
-
-        # Should be a boolean
-        assert isinstance(availability, bool)
-
-        # If True, should be able to import sasa_ext
-        if availability:
-            try:
-                import sasa_ext
-                assert hasattr(sasa_ext, 'compute_sasa')
-            except ImportError:
-                pytest.fail("SASA_EXT_AVAILABLE is True but sasa_ext not importable")
-
 
 class TestConstants:
     """Test constants that don't require complex imports."""

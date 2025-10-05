@@ -8,14 +8,13 @@ import pytest
 import numpy as np
 import time
 import gc
-
+import sasa_ext
 
 class TestPerformanceBenchmarks:
     """Test performance characteristics and scaling."""
 
-    def test_performance_scaling_with_atoms(self, sasa_ext_available):
+    def test_performance_scaling_with_atoms(self):
         """Test that algorithm scales reasonably with atom count."""
-        import sasa_ext
 
         atom_counts = [10, 25, 50, 100]
         times = []
@@ -59,9 +58,8 @@ class TestPerformanceBenchmarks:
             assert time_per_atom < max_time_per_atom, \
                 f"Too slow for {n_atoms} atoms: {time_per_atom:.3f}s per atom"
 
-    def test_performance_scaling_with_samples(self, sasa_ext_available):
+    def test_performance_scaling_with_samples(self):
         """Test that performance scales linearly with sample count."""
-        import sasa_ext
 
         coords = np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 0.0]], dtype=np.float32)
         radii = np.array([1.5, 1.5], dtype=np.float32)
@@ -88,9 +86,8 @@ class TestPerformanceBenchmarks:
             assert time_ratio < 1.5 * sample_ratio, \
                 f"Sample scaling poor: {time_ratio:.1f}x time for {sample_ratio:.1f}x samples"
 
-    def test_memory_usage_reasonable(self, sasa_ext_available):
+    def test_memory_usage_reasonable(self):
         """Test that memory usage is reasonable."""
-        import sasa_ext
 
         # Large but manageable test case
         n_atoms = 200
@@ -116,9 +113,8 @@ class TestPerformanceBenchmarks:
         assert points_memory_mb < max_expected_mb, \
             f"Surface points use too much memory: {points_memory_mb:.1f}MB"
 
-    def test_large_molecule_performance(self, sasa_ext_available):
+    def test_large_molecule_performance(self):
         """Test performance on a large molecule."""
-        import sasa_ext
 
         # Simulate a large protein (500 atoms)
         n_atoms = 500
@@ -171,9 +167,8 @@ class TestPerformanceBenchmarks:
 class TestNumericalStability:
     """Test numerical stability and robustness."""
 
-    def test_repeated_computation_stability(self, sasa_ext_available, convergence_tolerances):
+    def test_repeated_computation_stability(self, convergence_tolerances):
         """Test that repeated computations are stable."""
-        import sasa_ext
 
         coords = np.array([[0.0, 0.0, 0.0], [3.5, 0.0, 0.0]], dtype=np.float32)
         radii = np.array([1.5, 1.5], dtype=np.float32)
@@ -206,9 +201,8 @@ class TestNumericalStability:
 
         assert cv < 0.02, f"High variance across seeds: CV = {cv:.4f}"
 
-    def test_coordinate_precision_stability(self, sasa_ext_available):
+    def test_coordinate_precision_stability(self):
         """Test stability with different coordinate precisions."""
-        import sasa_ext
 
         base_coords = np.array([[0.0, 0.0, 0.0], [3.0, 0.0, 0.0]], dtype=np.float64)
         radii = np.array([1.5, 1.5], dtype=np.float32)
@@ -239,9 +233,8 @@ class TestNumericalStability:
                 assert relative_change < expected_stability, \
                     f"Unstable with {precision} precision: {relative_change:.4f} change"
 
-    def test_extreme_configurations_stability(self, sasa_ext_available):
+    def test_extreme_configurations_stability(self):
         """Test stability with extreme but valid configurations."""
-        import sasa_ext
 
         # Very close atoms
         close_coords = np.array([[0.0, 0.0, 0.0], [1e-3, 0.0, 0.0]], dtype=np.float32)
@@ -277,9 +270,8 @@ class TestNumericalStability:
         )
         assert sasa_mixed >= 0, "SASA should be non-negative for mixed radii"
 
-    def test_convergence_with_sample_size(self, sasa_ext_available):
+    def test_convergence_with_sample_size(self):
         """Test that results converge properly with increasing sample size."""
-        import sasa_ext
 
         # Use two atoms to create a system where variance is expected
         coords = np.array([[0.0, 0.0, 0.0], [3.2, 0.0, 0.0]], dtype=np.float32)
@@ -334,9 +326,8 @@ class TestNumericalStability:
 class TestConcurrencyAndThreadSafety:
     """Test behavior under concurrent usage (if applicable)."""
 
-    def test_multiple_simultaneous_calls(self, sasa_ext_available):
+    def test_multiple_simultaneous_calls(self):
         """Test that multiple simultaneous calls don't interfere."""
-        import sasa_ext
         import threading
         import queue
 

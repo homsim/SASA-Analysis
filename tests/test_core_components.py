@@ -8,18 +8,19 @@ neighbor list construction, and surface point testing.
 import pytest
 import numpy as np
 import scipy.stats as stats
+import sasa_ext
 
 
 class TestSpherePointGeneration:
     """Test sphere point generation specifically."""
 
-    def test_sphere_point_uniformity(self, sasa_ext_available):
-        """Test that sphere points are uniformly distributed."""
-        import sasa_ext
+    @pytest.mark.parametrize("r", [1.0, 2.0, 10.0])
+    def test_sphere_point_uniformity(self, convergence_tolerances, r):
+        """Test that sphere points are uniformly distributed. Parametrized the radii."""
 
         # Test with single atom at origin, zero probe radius
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
-        radii = np.array([1.0], dtype=np.float32)
+        radii = np.array([r], dtype=np.float32)
 
         _, points = sasa_ext.compute_sasa(
             coords, radii, probe_radius=0.0, n_samples=1000, seed=42
@@ -32,14 +33,14 @@ class TestSpherePointGeneration:
 
         # Check that all points are approximately on the sphere surface
         radius_errors = np.abs(distances - expected_radius)
-        assert np.max(radius_errors) < 0.01, "Points should be on sphere surface"
+        assert np.max(radius_errors) < convergence_tolerances["geometric"], "Points should be on sphere surface"
 
-    def test_sphere_point_distribution_statistical(self, sasa_ext_available):
-        """Test uniform distribution using statistical tests."""
-        import sasa_ext
+    @pytest.mark.parametrize("r", [1.0, 2.0, 10.0])
+    def test_sphere_point_distribution_statistical(self, convergence_tolerances, r):
+        """Test uniform distribution using statistical tests. Parametrized the radii."""
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
-        radii = np.array([1.0], dtype=np.float32)
+        radii = np.array([r], dtype=np.float32)
 
         _, points = sasa_ext.compute_sasa(
             coords, radii, probe_radius=0.0, n_samples=5000, seed=12345
@@ -52,35 +53,33 @@ class TestSpherePointGeneration:
         # Test z-coordinates are uniform in [-1, 1]
         z_coords = normalized_points[:, 2]
         _, p_value_z = stats.kstest(z_coords, lambda x: (x + 1) / 2)  # CDF for uniform[-1,1]
-        assert p_value_z > 0.01, f"Z-coordinates not uniform (p={p_value_z:.4f})"
+        assert p_value_z > convergence_tolerances["geometric"], f"Z-coordinates not uniform (p={p_value_z:.4f})"
 
         # Test phi angles are uniform in [0, 2π]
         phi = np.arctan2(normalized_points[:, 1], normalized_points[:, 0]) + np.pi
         _, p_value_phi = stats.kstest(phi, lambda x: x / (2 * np.pi))  # CDF for uniform[0,2π]
-        assert p_value_phi > 0.01, f"Phi angles not uniform (p={p_value_phi:.4f})"
+        assert p_value_phi > convergence_tolerances["geometric"], f"Phi angles not uniform (p={p_value_phi:.4f})"
 
-    def test_sphere_point_count(self, sasa_ext_available):
+    @pytest.mark.parametrize("n_samples", [100, 500, 1000])
+    def test_sphere_point_count(self, n_samples):
         """Test that point count matches expected for isolated atom."""
-        import sasa_ext
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
         radii = np.array([1.0], dtype=np.float32)
 
-        for n_samples in [100, 500, 1000]:
-            _, points = sasa_ext.compute_sasa(
-                coords, radii, probe_radius=0.0, n_samples=n_samples, seed=42
-            )
+        _, points = sasa_ext.compute_sasa(
+            coords, radii, probe_radius=0.0, n_samples=n_samples, seed=42
+        )
 
-            # For isolated atom, all points should be exposed
-            assert len(points) == n_samples, f"Expected {n_samples} points, got {len(points)}"
+        # For isolated atom, all points should be exposed
+        assert len(points) == n_samples, f"Expected {n_samples} points, got {len(points)}"
 
 
 class TestCoreSASAAlgorithm:
     """Test core SASA computation functionality."""
 
-    def test_single_atom_analytical(self, sasa_ext_available, simple_test_cases):
+    def test_single_atom_analytical(self, convergence_tolerances, simple_test_cases):
         """Test single atom case against analytical result."""
-        import sasa_ext
 
         case = simple_test_cases['single_atom']
 
@@ -93,12 +92,11 @@ class TestCoreSASAAlgorithm:
         expected_area = case['expected_area_factor'] * (case['radii'][0] ** 2)
         relative_error = abs(total_sasa - expected_area) / expected_area
 
-        assert relative_error < 0.01, f"Single atom SASA error too large: {relative_error*100:.2f}%"
+        assert relative_error < convergence_tolerances["area_relative"], f"Single atom SASA error too large: {relative_error*100:.2f}%"
         assert len(surface_points) > 0, "Should generate surface points"
 
-    def test_two_atoms_geometry(self, sasa_ext_available, simple_test_cases):
+    def test_two_atoms_geometry(self, simple_test_cases):
         """Test geometric behavior with two atoms."""
-        import sasa_ext
 
         separated = simple_test_cases['two_separated']
         touching = simple_test_cases['two_touching']
@@ -118,13 +116,12 @@ class TestCoreSASAAlgorithm:
         # Touching atoms should have less SASA than separated
         assert sasa_touch < sasa_sep, "Touching atoms should have less SASA than separated"
 
-    def test_buried_atom_configuration(self, sasa_ext_available, simple_test_cases):
+    def test_buried_atom_configuration(self, simple_test_cases):
         """Test atom burial in crowded environment."""
-        import sasa_ext
 
         case = simple_test_cases['buried_atom']
 
-        total_sasa, points = sasa_ext.compute_sasa(
+        total_sasa, _ = sasa_ext.compute_sasa(
             case['coords'], case['radii'],
             probe_radius=case['probe_radius'], n_samples=1000, seed=42
         )
@@ -146,11 +143,11 @@ class TestCoreSASAAlgorithm:
             all_isolated_sasa += isolated_sasa
 
         burial_ratio = total_sasa / all_isolated_sasa
+        # the 0.7 here is arbitrary...
         assert burial_ratio < 0.7, f"Burial effect insufficient: {burial_ratio:.2f}"
 
-    def test_parameter_effects(self, sasa_ext_available, simple_test_cases, sasa_parameters):
+    def test_parameter_effects(self, convergence_tolerances, simple_test_cases, sasa_parameters):
         """Test that parameters have expected effects."""
-        import sasa_ext
 
         case = simple_test_cases['single_atom']
 
@@ -180,11 +177,10 @@ class TestCoreSASAAlgorithm:
 
         # Should converge to similar values
         relative_diff = abs(sasa_many - sasa_few) / sasa_many
-        assert relative_diff < 0.05, f"Poor convergence with sample count: {relative_diff*100:.2f}%"
+        assert relative_diff < convergence_tolerances["area_relative"], f"Poor convergence with sample count: {relative_diff*100:.2f}%"
 
-    def test_reproducibility(self, sasa_ext_available, simple_test_cases, convergence_tolerances):
+    def test_reproducibility(self, simple_test_cases, convergence_tolerances):
         """Test that results are reproducible with same seed."""
-        import sasa_ext
 
         case = simple_test_cases['single_atom']
 
@@ -205,9 +201,9 @@ class TestCoreSASAAlgorithm:
             assert result[1] == first_result[1], \
                 "Point count should be reproducible with same seed"
 
-    def test_scaling_invariance(self, sasa_ext_available):
-        """Test that SASA scales correctly with coordinate scaling."""
-        import sasa_ext
+    @pytest.mark.parametrize("scale_factor", [2.0, 3.0, 4.0, 5.0])
+    def test_scaling_invariance(self, convergence_tolerances, scale_factor):
+        """Test that SASA scales correctly with coordinate scaling. Parametrized the scaling factor."""
 
         # Original configuration
         coords = np.array([[0.0, 0.0, 0.0], [3.0, 0.0, 0.0]], dtype=np.float32)
@@ -218,8 +214,7 @@ class TestCoreSASAAlgorithm:
             coords, radii, probe_radius=probe_radius, n_samples=1000, seed=42
         )
 
-        # Scaled configuration (2x)
-        scale_factor = 2.0
+        # Scaled configuration
         scaled_coords = coords * scale_factor
         scaled_radii = radii * scale_factor
         scaled_probe = probe_radius * scale_factor
@@ -229,19 +224,18 @@ class TestCoreSASAAlgorithm:
             probe_radius=scaled_probe, n_samples=1000, seed=42
         )
 
-        # SASA should scale by area factor (scale²)
+        # SASA should scale by area factor (scale^2)
         expected_sasa = original_sasa * (scale_factor ** 2)
         relative_error = abs(scaled_sasa - expected_sasa) / expected_sasa
 
-        assert relative_error < 0.02, f"Scaling invariance violated: {relative_error*100:.2f}% error"
+        assert relative_error < convergence_tolerances["geometric"], f"Scaling invariance violated: {relative_error*100:.2f}% error"
 
 
 class TestNeighborListConstruction:
     """Test spatial optimization via neighbor lists."""
 
-    def test_neighbor_finding_correctness(self, sasa_ext_available):
+    def test_neighbor_finding_correctness(self):
         """Test that neighbor lists find all relevant neighbors."""
-        import sasa_ext
 
         # Create configuration where we know which atoms should be neighbors
         coords = np.array([
@@ -266,37 +260,12 @@ class TestNeighborListConstruction:
             # Central atom in full environment should have less SASA than isolated
             assert sasa_all < 3 * central_sasa, "Neighbor effects should reduce SASA"
 
-    def test_performance_scaling(self, sasa_ext_available):
-        """Test that algorithm scales reasonably with atom count."""
-        import time
-        import sasa_ext
-
-        atom_counts = [10, 50, 100]
-        times = []
-
-        for n_atoms in atom_counts:
-            # Create random configuration
-            np.random.seed(42)  # For reproducibility
-            coords = np.random.rand(n_atoms, 3).astype(np.float32) * 20  # 20Å box
-            radii = np.full(n_atoms, 1.5, dtype=np.float32)
-
-            start_time = time.time()
-            sasa_ext.compute_sasa(coords, radii, probe_radius=1.4, n_samples=100, seed=42)
-            elapsed = time.time() - start_time
-            times.append(elapsed)
-
-        # Should scale roughly linearly (not quadratically)
-        # Check that 100 atoms doesn't take more than 10x the time of 10 atoms
-        scaling_factor = times[-1] / times[0]  # 100 atoms vs 10 atoms
-        assert scaling_factor < 20, f"Poor scaling: {scaling_factor:.1f}x slowdown for 10x atoms"
-
 
 class TestSurfacePointTesting:
     """Test the point burial logic."""
 
-    def test_point_burial_simple_cases(self, sasa_ext_available):
+    def test_point_burial_simple_cases(self):
         """Test point burial with simple geometric cases."""
-        import sasa_ext
 
         # Two touching spheres - points between them should be buried
         coords = np.array([[0.0, 0.0, 0.0], [3.0, 0.0, 0.0]], dtype=np.float32)
@@ -316,9 +285,8 @@ class TestSurfacePointTesting:
         assert len(points_large) < len(points_small), "Large probe should bury more points"
         assert total_sasa_large > total_sasa_small, "Large probe should increase total SASA"
 
-    def test_complete_burial(self, sasa_ext_available):
+    def test_complete_burial(self):
         """Test case where central atom is completely buried."""
-        import sasa_ext
 
         # Central atom surrounded by large neighbors
         coords = np.array([

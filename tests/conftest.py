@@ -9,23 +9,8 @@ import tempfile
 import os
 from pathlib import Path
 
-# Test for extension availability
-try:
-    import sasa_ext
-    SASA_EXT_AVAILABLE = True
-except ImportError:
-    SASA_EXT_AVAILABLE = False
+import sasa_ext
 
-# Note: VMD is no longer required since we replaced it with our C extension
-
-@pytest.fixture
-def sasa_ext_available():
-    """Fixture that skips tests if SASA extension is not available."""
-    if not SASA_EXT_AVAILABLE:
-        pytest.skip("SASA extension not available")
-    return True
-
-# VMD fixture removed - no longer needed since VMD dependency was eliminated
 
 @pytest.fixture
 def reference_data():
@@ -145,7 +130,7 @@ def convergence_tolerances():
     """Tolerance values for different types of comparisons."""
     return {
         'area_relative': 0.005,      # 0.5% for total SASA area
-        'area_absolute': 1.0,        # 1.0 Ų absolute tolerance
+        'area_absolute': 1.0,        # 1.0 absolute tolerance
         'point_count_relative': 0.05, # 5% for point counts
         'reproducibility': 1e-10,    # Exact for same seed
         'convergence': 0.02,         # 2% for sample convergence

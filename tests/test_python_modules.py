@@ -64,7 +64,7 @@ class TestSASACoreModule:
         assert get_vdw_radius('C1') == element_radii['C']
         assert get_vdw_radius('N2') == element_radii['N']
 
-    def test_compute_sasa_from_xyz(self, sasa_ext_available, test_xyz_files):
+    def test_compute_sasa_from_xyz(self, test_xyz_files):
         """Test the complete XYZ to SASA computation pipeline."""
         from sasa_lammps.sasa_core import compute_sasa_from_xyz
 
@@ -87,7 +87,7 @@ class TestSASACoreModule:
         assert abs(total_sasa - total_sasa2) < 1e-6, "SASA should be same regardless of points flag"
         assert surface_points2 is None, "Should not return points when points=False"
 
-    def test_create_sasa_xyz_function(self, sasa_ext_available, test_xyz_files, tmp_path):
+    def test_create_sasa_xyz_function(self, test_xyz_files, tmp_path):
         """Test the SASA XYZ creation function."""
         from sasa_lammps.sasa_core import _create_sasa_xyz
         from sasa_lammps.constants import SASAXYZ
@@ -171,7 +171,7 @@ class TestConversionModuleIntegration:
                 f"Unexpected import error: {e}"
 
     @pytest.mark.skipif(True, reason="Requires full package installation with dependencies")
-    def test_create_sasa_xyz_integration(self, sasa_ext_available, test_xyz_files, tmp_path):
+    def test_create_sasa_xyz_integration(self, test_xyz_files, tmp_path):
         """Test the integrated _create_sasa_xyz function."""
         from sasa_lammps.conversion import _create_sasa_xyz
 
@@ -267,7 +267,7 @@ class TestPackageStructure:
 class TestErrorPropagation:
     """Test that errors are properly propagated through the Python layers."""
 
-    def test_c_extension_error_propagation(self, sasa_ext_available):
+    def test_c_extension_error_propagation(self):
         """Test that C extension errors are properly caught and re-raised."""
         import sasa_ext
 
@@ -292,7 +292,7 @@ class TestErrorPropagation:
         with pytest.raises((ValueError, IndexError)):
             parse_xyz_file(str(bad_file))
 
-    def test_sasa_computation_error_propagation(self, sasa_ext_available, tmp_path):
+    def test_sasa_computation_error_propagation(self, tmp_path):
         """Test error propagation in SASA computation pipeline."""
         from sasa_lammps.sasa_core import compute_sasa_from_xyz
 

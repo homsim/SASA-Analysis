@@ -6,14 +6,13 @@ Tests edge cases, error conditions, and input validation for the SASA extension.
 
 import pytest
 import numpy as np
-
+import sasa_ext
 
 class TestInputValidation:
     """Test input validation and error handling."""
 
-    def test_array_shape_validation(self, sasa_ext_available):
+    def test_array_shape_validation(self):
         """Test validation of input array shapes."""
-        import sasa_ext
 
         valid_coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
         valid_radii = np.array([1.5], dtype=np.float32)
@@ -38,9 +37,8 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="(1D array|too deep|shape)"):
             sasa_ext.compute_sasa(valid_coords, wrong_radii_2d)
 
-    def test_array_type_conversion(self, sasa_ext_available):
+    def test_array_type_conversion(self):
         """Test that arrays are properly converted to correct types."""
-        import sasa_ext
 
         # Test with different dtypes - should be automatically converted
         coords_int = np.array([[0, 0, 0]], dtype=np.int32)
@@ -59,9 +57,8 @@ class TestInputValidation:
         assert sasa > 0
         assert len(points) > 0
 
-    def test_empty_arrays(self, sasa_ext_available):
+    def test_empty_arrays(self):
         """Test behavior with empty arrays."""
-        import sasa_ext
 
         empty_coords = np.array([], dtype=np.float32).reshape(0, 3)
         empty_radii = np.array([], dtype=np.float32)
@@ -71,7 +68,7 @@ class TestInputValidation:
         assert sasa == 0.0
         assert len(points) == 0
 
-    def test_parameter_validation(self, sasa_ext_available):
+    def test_parameter_validation(self):
         """Test validation of algorithm parameters."""
         import sasa_ext
 
@@ -90,9 +87,8 @@ class TestInputValidation:
         with pytest.raises((ValueError, RuntimeError)):
             sasa_ext.compute_sasa(coords, radii, n_samples=-100)
 
-    def test_extreme_coordinates(self, sasa_ext_available):
+    def test_extreme_coordinates(self):
         """Test behavior with extreme coordinate values."""
-        import sasa_ext
 
         # Very large coordinates
         large_coords = np.array([[1e6, 1e6, 1e6]], dtype=np.float32)
@@ -108,9 +104,8 @@ class TestInputValidation:
         assert sasa > 0
         assert len(points) > 0
 
-    def test_extreme_radii(self, sasa_ext_available):
+    def test_extreme_radii(self):
         """Test behavior with extreme radii values."""
-        import sasa_ext
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
 
@@ -131,9 +126,8 @@ class TestInputValidation:
         sasa, points = sasa_ext.compute_sasa(coords, zero_radii)
         assert sasa >= 0  # Should handle gracefully
 
-    def test_nan_and_inf_handling(self, sasa_ext_available):
+    def test_nan_and_inf_handling(self):
         """Test handling of NaN and infinite values."""
-        import sasa_ext
 
         # NaN coordinates
         nan_coords = np.array([[np.nan, 0.0, 0.0]], dtype=np.float32)
@@ -157,9 +151,8 @@ class TestInputValidation:
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
 
-    def test_single_point_sampling(self, sasa_ext_available):
+    def test_single_point_sampling(self):
         """Test with minimal sampling (n_samples=1)."""
-        import sasa_ext
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
         radii = np.array([1.5], dtype=np.float32)
@@ -169,9 +162,8 @@ class TestEdgeCases:
         assert sasa >= 0
         assert len(points) <= 1  # At most 1 point
 
-    def test_identical_atom_positions(self, sasa_ext_available):
+    def test_identical_atom_positions(self):
         """Test behavior with atoms at identical positions."""
-        import sasa_ext
 
         # Two atoms at same position
         coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], dtype=np.float32)
@@ -181,9 +173,8 @@ class TestEdgeCases:
         sasa, points = sasa_ext.compute_sasa(coords, radii, n_samples=100)
         assert sasa >= 0
 
-    def test_very_close_atoms(self, sasa_ext_available):
+    def test_very_close_atoms(self):
         """Test behavior with atoms very close together."""
-        import sasa_ext
 
         # Atoms almost overlapping
         coords = np.array([[0.0, 0.0, 0.0], [1e-6, 0.0, 0.0]], dtype=np.float32)
@@ -197,9 +188,8 @@ class TestEdgeCases:
         # Allow for significant variation due to overlap effects
         assert abs(sasa - single_sasa) / single_sasa < 1.0  # Within 100%
 
-    def test_linear_configuration(self, sasa_ext_available):
+    def test_linear_configuration(self):
         """Test with atoms in perfect linear arrangement."""
-        import sasa_ext
 
         # Five atoms in a line
         coords = np.array([
@@ -222,9 +212,8 @@ class TestEdgeCases:
         # Total should be less than 5x single atom due to neighbor effects
         assert sasa < 4.0 * end_atom_sasa, "Linear arrangement should show neighbor effects"
 
-    def test_planar_configuration(self, sasa_ext_available):
+    def test_planar_configuration(self):
         """Test with atoms in a plane."""
-        import sasa_ext
 
         # Atoms arranged in a plane
         coords = np.array([
@@ -239,9 +228,8 @@ class TestEdgeCases:
         assert sasa > 0
         assert len(points) > 0
 
-    def test_very_large_probe(self, sasa_ext_available):
+    def test_very_large_probe(self):
         """Test with probe radius much larger than atoms."""
-        import sasa_ext
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
         radii = np.array([1.0], dtype=np.float32)
@@ -257,9 +245,8 @@ class TestEdgeCases:
         relative_error = abs(sasa - expected_area) / expected_area
         assert relative_error < 0.05, f"Large probe radius error: {relative_error*100:.2f}%"
 
-    def test_memory_stress(self, sasa_ext_available):
+    def test_memory_stress(self):
         """Test with configurations that stress memory usage."""
-        import sasa_ext
 
         # Many atoms with many samples
         n_atoms = 50
@@ -271,9 +258,8 @@ class TestEdgeCases:
         assert sasa > 0
         assert len(points) <= n_atoms * 2000  # Upper bound on points
 
-    def test_reproducibility_different_seeds(self, sasa_ext_available):
+    def test_reproducibility_different_seeds(self):
         """Test that different seeds give different results."""
-        import sasa_ext
 
         # Use fewer samples or more complex geometry where variance is expected
         coords = np.array([[0.0, 0.0, 0.0], [3.0, 0.0, 0.0]], dtype=np.float32)

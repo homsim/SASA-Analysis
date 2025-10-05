@@ -9,15 +9,13 @@ import pytest
 import numpy as np
 import json
 from pathlib import Path
-
+import sasa_ext
 
 class TestVMDReferenceComparison:
     """Test against VMD reference data if available."""
 
-    @pytest.mark.skipif(True, reason="VMD reference data generation needs to be run first")
-    def test_against_vmd_reference_data(self, sasa_ext_available, reference_data, convergence_tolerances):
+    def test_against_vmd_reference_data(self, reference_data, convergence_tolerances):
         """Test against pre-generated VMD reference data."""
-        import sasa_ext
 
         if not reference_data:
             pytest.skip("No VMD reference data available")
@@ -92,9 +90,8 @@ class TestVMDReferenceComparison:
 class TestVMDAlgorithmFidelity:
     """Test that our algorithm matches VMD's behavior precisely."""
 
-    def test_vmd_seed_reproducibility(self, sasa_ext_available):
+    def test_vmd_seed_reproducibility(self):
         """Test that using VMD's seed gives consistent results."""
-        import sasa_ext
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
         radii = np.array([1.5], dtype=np.float32)
@@ -121,9 +118,8 @@ class TestVMDAlgorithmFidelity:
                     err_msg="First surface point should be identical"
                 )
 
-    def test_vmd_parameter_compatibility(self, sasa_ext_available, sasa_parameters):
+    def test_vmd_parameter_compatibility(self, sasa_parameters):
         """Test parameter ranges that VMD typically uses."""
-        import sasa_ext
 
         # Simple test molecule
         coords = np.array([
@@ -155,9 +151,8 @@ class TestVMDAlgorithmFidelity:
             assert sasa > 0.1 * 4 * np.pi * expected_min_radius**2, \
                 f"SASA too small for params {params}"
 
-    def test_sphere_point_generation_matches_vmd(self, sasa_ext_available):
+    def test_sphere_point_generation_matches_vmd(self):
         """Test that sphere point generation follows VMD's method."""
-        import sasa_ext
 
         # Single atom test with various sample counts
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
@@ -190,9 +185,8 @@ class TestVMDAlgorithmFidelity:
 class TestParameterSweepAgainstExpectations:
     """Test parameter effects match expected VMD behavior."""
 
-    def test_probe_radius_sweep(self, sasa_ext_available):
+    def test_probe_radius_sweep(self):
         """Test that probe radius has expected monotonic effect."""
-        import sasa_ext
 
         # Two-atom system
         coords = np.array([[0.0, 0.0, 0.0], [3.5, 0.0, 0.0]], dtype=np.float32)
@@ -217,9 +211,8 @@ class TestParameterSweepAgainstExpectations:
         assert 1.5 < ratio_large_small < 10, \
             f"Probe radius effect seems unreasonable: {ratio_large_small:.2f}x"
 
-    def test_sample_count_convergence(self, sasa_ext_available, convergence_tolerances):
+    def test_sample_count_convergence(self, convergence_tolerances):
         """Test that SASA converges with increasing sample count."""
-        import sasa_ext
 
         # Use a more complex geometry to ensure variance exists
         coords = np.array([[0.0, 0.0, 0.0], [3.1, 0.0, 0.0]], dtype=np.float32)
@@ -263,9 +256,8 @@ class TestParameterSweepAgainstExpectations:
         assert coefficient_of_variation < convergence_tolerances['convergence'], \
             f"SASA not converged at high sample counts: CV = {coefficient_of_variation:.4f}"
 
-    def test_distance_dependence(self, sasa_ext_available):
+    def test_distance_dependence(self):
         """Test that SASA depends correctly on inter-atomic distances."""
-        import sasa_ext
 
         base_coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
         radii = np.array([1.5, 1.5], dtype=np.float32)
@@ -301,7 +293,7 @@ class TestParameterSweepAgainstExpectations:
 class TestIntegrationWithSASACoreModule:
     """Test integration between C extension and Python core module."""
 
-    def test_sasa_core_integration(self, sasa_ext_available, test_xyz_files):
+    def test_sasa_core_integration(self, test_xyz_files):
         """Test that SASA core module works with C extension."""
         from sasa_lammps.sasa_core import parse_xyz_file, compute_sasa_from_xyz
 
@@ -310,7 +302,6 @@ class TestIntegrationWithSASACoreModule:
         coords, radii = parse_xyz_file(str(xyz_file))
 
         # Test direct C extension call
-        import sasa_ext
         sasa1, points1 = sasa_ext.compute_sasa(coords, radii, probe_radius=1.4, n_samples=500)
 
         # Test through replacement module
@@ -325,7 +316,7 @@ class TestIntegrationWithSASACoreModule:
         points2_array = np.array(points2)
         np.testing.assert_array_almost_equal(points1, points2_array, decimal=6)
 
-    def test_xyz_parsing_accuracy(self, sasa_ext_available, test_xyz_files, element_radii):
+    def test_xyz_parsing_accuracy(self, test_xyz_files, element_radii):
         """Test that XYZ file parsing assigns correct radii."""
         from sasa_lammps.sasa_core import parse_xyz_file
 

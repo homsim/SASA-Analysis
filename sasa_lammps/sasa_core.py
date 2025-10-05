@@ -7,11 +7,7 @@ using Monte Carlo sampling on atomic surfaces.
 
 import os
 import numpy as np
-try:
-    import sasa_ext
-    SASA_EXT_AVAILABLE = True
-except ImportError:
-    SASA_EXT_AVAILABLE = False
+import sasa_ext
 
 def parse_xyz_file(xyz_file_path):
     """
@@ -122,8 +118,6 @@ def compute_sasa_from_xyz(xyz_file_path, srad=1.4, samples=500, points=True):
     surface_points : numpy.ndarray or None
         (N, 3) array of surface point coordinates if points=True, else None
     """
-    if not SASA_EXT_AVAILABLE:
-        raise ImportError("SASA extension not available. Install package with C extension support.")
 
     # Parse coordinates and radii from XYZ file
     coords, radii = parse_xyz_file(xyz_file_path)
