@@ -2,9 +2,9 @@ import os
 import numpy as np
 from ovito.io import import_file, export_file
 from ovito.data import NearestNeighborFinder
-from vmd import atomsel, molecule
 
 from sasa_lammps.constants import SASAXYZ
+from sasa_lammps.sasa_core import _create_sasa_xyz as _create_sasa_xyz_impl
 
 
 def _convert_data_file(path, data_file):
@@ -31,8 +31,7 @@ def _convert_data_file(path, data_file):
 
 def _create_sasa_xyz(path, xyz_file, srad, samples):
     """
-    Use an unofficial (?) VMD API to create van der Waals surface points:
-    https://github.com/Eigenstate/vmd-python
+    Create van der Waals surface points using efficient C extension.
 
     Parameters
     ----------
@@ -52,27 +51,7 @@ def _create_sasa_xyz(path, xyz_file, srad, samples):
         N is loosely determined by 'samples' argument.
 
     """
-    export_file = SASAXYZ
-    mol = molecule.load("xyz", os.path.join(path, xyz_file))
-    sel = atomsel()
-
-    _, sasa_points = sel.sasa(srad=srad, samples=samples, points=True)
-
-    export_points = np.array(sasa_points, dtype=str)
-    export_points = np.insert(export_points, 0, "He", axis=1)
-
-    header = f"{len(export_points)}\n "
-    np.savetxt(
-        os.path.join(path, export_file),
-        export_points,
-        header=header,
-        comments="",
-        fmt="%s",
-    )
-
-    sasa_points = np.array(sasa_points)
-
-    return sasa_points
+    return _create_sasa_xyz_impl(path, xyz_file, srad, samples)
 
 
 def _neighbor_finder(path, data_file, sasa_positions):

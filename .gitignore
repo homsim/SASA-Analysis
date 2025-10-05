@@ -1,12 +1,45 @@
 __pycache__/
 sasa_lammps/__pycache__/
+sasa_ext/__pycache__/
+
+# C extension build artifacts
+*.so
+*.o
+*.a
+*.dylib
+*.dll
+*.pyd
+build/
+dist/
+*.egg-info/
+sasa_ext/*.so
+sasa_ext/*.o
+
+# Python packaging
+*.whl
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
 # testing directory
 testing*
 SASA_example/
 
-# lammps directory 
+# lammps directory
 lammps-stable*
 
-# ovito directory 
+# ovito directory
 ovito-basic*

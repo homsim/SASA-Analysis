@@ -1,30 +1,37 @@
+# Overview
+
+This package calcukates the solvent-accesible surface analysis (SASA) on a given macro-molecule. It places a given probe-molecule on the surface points to compute a 3D interaction energy surface. The potential energy is calculated with a ReaxFF potential that needs to be provided (see below) and uses [LAMMPS](https://www.lammps.org) as actual implementation for the energy calculations.
+
 # Build and Install
 
-The package requires the `vmd-python` package, which is only distributed in the `conda-forge` channel and unfortunately has the restriction of only working with `python<3.12.0a0`. For this reason, this package has to be installed in a conda environment as its dependencies cannot be installed from PyPI alone. 
-This package will be build locally and can then be imported.
+This package uses a custom C extension for SASA calculations and can be installed as a standard Python package using pip.
 
-## Environment
+## Requirements
 
-First, create a fresh conda-environment:
+- Python 3.8 or higher
+- A C compiler (gcc, clang)
+- Python development headers
 
+## Installation
+
+It is recommended to use a python environment.
 ```bash
-conda create --name sasa --strict-channel-priority -c conda-forge python"<3.12.0a0" conda-build
+# Create a python environment (optional) or use an existing one
+python -m venv ~/venv/sasa
+# Activate your Python environment
+source ~/venv/sasa/bin/activate
+
+# From this projects root directory install the package with all dependencies
+pip install -e .
 ```
 
-and activate it
+## Verification
+
+After installation, you can verify that the SASA extension is loaded correctly:
 
 ```bash
-conda activate sasa
+python -c "import sasa_ext; print('✓ SASA extension loaded successfully')"
 ```
-## Install dependencies and build
-
-In the `SASA-analysis` directory (NOT in the `build_recipe`) execute 
-
-```bash
-./build.sh
-```
-
-This will install the dependencies, build the package locally and then install the package itself. Executing the script, might take a few minutes. When it is finished, the package is ready to use.
 
 # Usage
 
