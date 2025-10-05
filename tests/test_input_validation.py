@@ -88,7 +88,7 @@ class TestInputValidation:
             sasa_ext.compute_sasa(coords, radii, n_samples=-100)
 
     def test_extreme_coordinates(self):
-        """Test behavior with extreme coordinate values."""
+        """Test behavior with extreme coordinate values. Ensures that different unit systems are numerically possible."""
 
         # Very large coordinates
         large_coords = np.array([[1e6, 1e6, 1e6]], dtype=np.float32)
@@ -228,7 +228,7 @@ class TestEdgeCases:
         assert sasa > 0
         assert len(points) > 0
 
-    def test_very_large_probe(self):
+    def test_very_large_probe(self, convergence_tolerances):
         """Test with probe radius much larger than atoms."""
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
@@ -243,7 +243,7 @@ class TestEdgeCases:
         expected_area = 4 * np.pi * expected_radius**2
 
         relative_error = abs(sasa - expected_area) / expected_area
-        assert relative_error < 0.05, f"Large probe radius error: {relative_error*100:.2f}%"
+        assert relative_error < convergence_tolerances["area_relative"], f"Large probe radius error: {relative_error*100:.2f}%"
 
     def test_memory_stress(self):
         """Test with configurations that stress memory usage."""
