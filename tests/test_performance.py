@@ -46,7 +46,7 @@ class TestPerformanceBenchmarks:
             time_ratio = times[-1] / times[0]
             atom_ratio = atom_counts[-1] / atom_counts[0]
 
-            # Should be better than O(n²) scaling
+            # Should be better than O(n^2) scaling
             max_expected_ratio = atom_ratio ** 1.5  # Allow up to O(n^1.5)
             assert time_ratio < max_expected_ratio, \
                 f"Poor scaling: {time_ratio:.1f}x time for {atom_ratio:.1f}x atoms"
@@ -91,7 +91,6 @@ class TestPerformanceBenchmarks:
 
         # Large but manageable test case
         n_atoms = 200
-        np.random.seed(42)
         coords = np.random.rand(n_atoms, 3).astype(np.float32) * 50
         radii = np.full(n_atoms, 1.5, dtype=np.float32)
 
@@ -118,7 +117,6 @@ class TestPerformanceBenchmarks:
 
         # Simulate a large protein (500 atoms)
         n_atoms = 500
-        np.random.seed(12345)
 
         # Create a more realistic distribution (not completely random)
         # Protein-like shape: roughly spherical with some density variation
@@ -326,7 +324,8 @@ class TestNumericalStability:
 class TestConcurrencyAndThreadSafety:
     """Test behavior under concurrent usage (if applicable)."""
 
-    def test_multiple_simultaneous_calls(self):
+    @pytest.mark.parametrize("n_threads", [5, 7, 8, 15])
+    def test_multiple_simultaneous_calls(self, n_threads):
         """Test that multiple simultaneous calls don't interfere."""
         import threading
         import queue
@@ -348,7 +347,6 @@ class TestConcurrencyAndThreadSafety:
 
         # Start multiple threads
         threads = []
-        n_threads = 5
 
         for i in range(n_threads):
             thread = threading.Thread(target=compute_sasa_thread, args=(i,))
