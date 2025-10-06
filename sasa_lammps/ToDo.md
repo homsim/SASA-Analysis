@@ -1,30 +1,4 @@
 # ToDo
 
-## General
-
-- [X] Create function(s) to write SASA positions
-- [x] Write proper `README.md`
-- [X] Implement as importable package -> How to partition the methods properly?
-- [X] -> Have to use `conda` because `vmd-python` is not available in PyPi, so a .yml file will have to do to install dependencies
-- [X] Create a class hirarchy to avoid the countless repeating function arguments
-- [X] Enable 'real' multiprocessing by running multiple LAMMPS instances in parallel
-- [X] Strings for the force field and dump commands
-- [X] Add a proper termination criterion to kill all running processes
-- [x] Terminate all processes if an error is detected in any of them (they all use the same in-file anyway)
-- [X] Add star-import for `sasa()`
-- [X] Remove the import option using the `env.yml`. Instead use 
-`conda install --strict-channel-priority -c https://conda.ovito.org -c conda-forge python"<3.12.0a0" ovito matplotlib numpy tqdm scipy pandas vmd-python`
-
-## 1-atomic probe
-
-- [X] Check routine to see if all the files are present
-- [X] Write general method for executing LAMMPS
-
-## N_atomic probe
-
-- [X] Rotation of the molecule in order to get defined interactions
-
-## Analysis
-
-- [X] Proper output file format with probe position, energy, residue
-
+- [ ] Currently, the test_against_vmd_reference_data tests are failing for all parameters. I already checked: The newly added vdW-radii do not make a significant difference. This basically leaves only our new C extension implementation. My approach is to first generate more test data from the original vmd-python using the generate_vmd_reference.py. I could for example use a different enzyome other than lysozyme and also various other molecules, like amino acids. Of course I need to first create the xyz data for those. I then check for optimization potential in the C extension by stringly orienting myself on all the tests (not only the test_against_vmd_reference_data, but also all the others). 
+- [ ] Check for refactor potential. E.g. conversion.py::_create_sasa_xyz()
