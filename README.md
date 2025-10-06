@@ -27,10 +27,14 @@ pip install -e .
 
 ## Verification
 
-After installation, you can verify that the SASA extension is loaded correctly:
-
+After installation, you can either verify that the SASA extension is loaded correctly:
 ```bash
 python -c "import sasa_ext; print('✓ SASA extension loaded successfully')"
+```
+
+or/and execute the tests in the `tests` directory:
+```bash
+pytest ./tests
 ```
 
 # Usage
