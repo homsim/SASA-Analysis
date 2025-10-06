@@ -12,54 +12,68 @@ from pathlib import Path
 import sasa_ext
 
 class TestVMDReferenceComparison:
-    """Test against VMD reference data if available."""
+    """Test against VMD reference data. These tests have a very high priority."""
 
-    def test_against_vmd_reference_data(self, reference_data, convergence_tolerances):
-        """Test against pre-generated VMD reference data."""
+    @pytest.mark.parametrize("test_case", [
+        "lysozyme_small",
+        "lysozyme_medium",
+        "lysozyme_small_probe",
+        "lysozyme_large_probe"
+    ])
+    def test_against_vmd_reference_data(self, test_case, reference_data, convergence_tolerances):
+        """Test against pre-generated VMD reference data for specific test case."""
 
         if not reference_data:
             pytest.skip("No VMD reference data available")
 
-        for file_key, configs in reference_data.items():
-            for config_key, ref_data in configs.items():
-                # Parse config parameters
-                parts = config_key.split('_')
-                probe_radius = float(parts[1])
-                n_samples = int(parts[3])
+        if test_case not in reference_data:
+            pytest.skip(f"No reference data for test case: {test_case}")
 
-                # Load test file and run our implementation
-                test_file = Path(__file__).parent / "resources" / f"{file_key}.xyz"
-                if not test_file.exists():
-                    continue
+        ref_data = reference_data[test_case]
 
-                coords, radii = self._load_xyz_file(test_file)
+        # Extract parameters from the reference data structure
+        params = ref_data.get('parameters', {})
+        probe_radius = params.get('srad', 1.4)
+        n_samples = params.get('samples', 500)
 
-                our_sasa, our_points = sasa_ext.compute_sasa(
-                    coords, radii,
-                    probe_radius=probe_radius,
-                    n_samples=n_samples,
-                    seed=38572111  # Match VMD seed
-                )
+        # Load test file and run our implementation
+        test_file = Path(__file__).parent / "resources" / f"test_{test_case}.xyz"
+        if not test_file.exists():
+            pytest.skip(f"Test file does not exist: {test_file}")
 
-                # Compare total SASA
-                ref_sasa = ref_data['total_sasa']
-                relative_error = abs(our_sasa - ref_sasa) / ref_sasa
+        coords, radii = self._load_xyz_file(test_file)
 
-                assert relative_error < convergence_tolerances['area_relative'], (
-                    f"SASA mismatch for {file_key}/{config_key}: "
-                    f"ours={our_sasa:.2f}, ref={ref_sasa:.2f}, "
-                    f"error={relative_error*100:.2f}%"
-                )
+        our_sasa, our_points = sasa_ext.compute_sasa(
+            coords, radii,
+            probe_radius=probe_radius,
+            n_samples=n_samples,
+            seed=38572111  # Match VMD seed
+        )
 
-                # Compare point counts (should be similar but not exact due to randomness)
-                ref_points = ref_data['n_surface_points']
-                point_error = abs(len(our_points) - ref_points) / ref_points
+        # Compare total SASA
+        results = ref_data.get('results', {})
+        ref_sasa = results.get('sasa_area')
+        if ref_sasa is None:
+            pytest.skip(f"No reference SASA area for {test_case}")
 
-                assert point_error < convergence_tolerances['point_count_relative'], (
-                    f"Point count mismatch for {file_key}/{config_key}: "
-                    f"ours={len(our_points)}, ref={ref_points}, "
-                    f"error={point_error*100:.2f}%"
-                )
+        relative_error = abs(our_sasa - ref_sasa) / ref_sasa
+
+        assert relative_error < convergence_tolerances['area_relative'], (
+            f"SASA mismatch for {test_case}: "
+            f"ours={our_sasa:.2f}, ref={ref_sasa:.2f}, "
+            f"error={relative_error*100:.2f}%"
+        )
+
+        # Compare point counts (should be similar but not exact due to randomness)
+        ref_points = results.get('n_surface_points')
+        if ref_points is not None:
+            point_error = abs(len(our_points) - ref_points) / ref_points
+
+            assert point_error < convergence_tolerances['point_count_relative'], (
+                f"Point count mismatch for {test_case}: "
+                f"ours={len(our_points)}, ref={ref_points}, "
+                f"error={point_error*100:.2f}%"
+            )
 
     def _load_xyz_file(self, xyz_file):
         """Load coordinates and radii from XYZ file."""

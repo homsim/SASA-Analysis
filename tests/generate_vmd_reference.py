@@ -2,11 +2,12 @@
 """
 Generate VMD reference data for SASA calculation testing.
 
-This script uses VMD-python 3.1.6 to create reference test data
-that we can later compare against our C extension implementation.
+This script uses VMD-python 3.1.6 (package available in conda-forge: 
+https://anaconda.org/conda-forge/vmd-python) to create reference test data
+that we can later compare against the C extension implementation.
 
-NOTE: This script should be run from the test/ directory in the 'sasa' conda environment:
-cd test && conda activate sasa && python generate_vmd_reference.py
+NOTE: This script should be run from the test/ directory in the 'sasa_vmd_ref' conda environment:
+cd test && conda activate sasa_vmd_ref && python generate_vmd_reference.py
 """
 
 import sys
