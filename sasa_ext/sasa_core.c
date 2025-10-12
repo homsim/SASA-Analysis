@@ -1,31 +1,32 @@
 #include "sasa_core.h"
+#include <stdlib.h>
 
-// Simple linear congruential generator for reproducible random numbers
-typedef struct {
-    unsigned int state;
-} RNG;
-
-static void rng_init(RNG *rng, unsigned int seed) {
-    rng->state = seed;
+// VMD-compatible random number generator
+// Use system rand() to match VMD's behavior exactly
+static void vmd_srandom(unsigned int seed) {
+    srand(seed);
 }
 
-static float rng_uniform(RNG *rng) {
-    // LCG constants from Numerical Recipes
-    rng->state = (1664525U * rng->state + 1013904223U);
-    return (float)(rng->state) / (float)(0xFFFFFFFFU);
+static long vmd_random(void) {
+    return (long)rand();
 }
+
+// VMD uses RAND_MAX (typically 2147483647 on most systems)
+#define VMD_RAND_MAX RAND_MAX
+static const float RAND_MAX_INV = 1.0f / VMD_RAND_MAX;
 
 void generate_sphere_points(Vec3 *sphere_points, int n_samples, unsigned int seed) {
-    RNG rng;
-    rng_init(&rng, seed);
+    // Initialize VMD's random number generator with the exact seed
+    vmd_srandom(seed);
 
     for (int i = 0; i < n_samples; i++) {
-        float u1 = rng_uniform(&rng);
-        float u2 = rng_uniform(&rng);
+        // VMD's exact algorithm from Measure.C:1433-1441
+        float u1 = (float) vmd_random();
+        float u2 = (float) vmd_random();
 
-        // Uniform distribution on sphere using spherical coordinates
-        float z = 2.0f * u1 - 1.0f;
-        float phi = 2.0f * PI * u2;
+        // VMD's exact conversion
+        float z = 2.0f * u1 * RAND_MAX_INV - 1.0f;
+        float phi = 2.0f * PI * u2 * RAND_MAX_INV;
         float r = sqrtf(1.0f - z * z);
 
         sphere_points[i].x = r * cosf(phi);
@@ -104,10 +105,13 @@ int is_point_buried(
         float dx = point.x - neighbor.x;
         float dy = point.y - neighbor.y;
         float dz = point.z - neighbor.z;
-        float dist = sqrtf(dx*dx + dy*dy + dz*dz);
 
+        // VMD uses squared distance comparison (more efficient and precise)
         float neighbor_cutoff = radii[neighbor_idx] + probe_radius;
-        if (dist < neighbor_cutoff) {
+        float neighbor_cutoff_sq = neighbor_cutoff * neighbor_cutoff;
+        float dist_sq = dx*dx + dy*dy + dz*dz;
+
+        if (dist_sq <= neighbor_cutoff_sq) {
             return 1;  // Point is buried
         }
     }

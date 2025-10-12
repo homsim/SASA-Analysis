@@ -311,7 +311,7 @@ class TestImplementationReadiness:
         # Algorithm components
         algorithm_components = [
             'generate_sphere_points',
-            'rng_uniform',
+            'vmd_random',             # Updated to VMD-compatible RNG
             'build_neighbor_lists',
             'is_point_buried',
             'compute_sasa'

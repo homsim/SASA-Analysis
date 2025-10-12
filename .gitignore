@@ -43,3 +43,6 @@ lammps-stable*
 
 # ovito directory
 ovito-basic*
+
+#vmd
+vmd-python*

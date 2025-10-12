@@ -11,14 +11,37 @@ import json
 from pathlib import Path
 import sasa_ext
 
+
 class TestVMDReferenceComparison:
     """Test against VMD reference data. These tests have a very high priority."""
 
     @pytest.mark.parametrize("test_case", [
+        # Original lysozyme tests
         "lysozyme_small",
         "lysozyme_medium",
         "lysozyme_small_probe",
-        "lysozyme_large_probe"
+        "lysozyme_large_probe",
+        # Diverse protein tests
+        "ubiquitin_standard",
+        "ubiquitin_high_samples",
+        "ubiquitin_small_probe",
+        "ubiquitin_large_probe",
+        "ribonuclease_standard",
+        "ribonuclease_high_samples",
+        "ribonuclease_small_probe",
+        "ribonuclease_large_probe",
+        "crambin_standard",
+        "crambin_high_samples",
+        "crambin_small_probe",
+        "crambin_large_probe",
+        "bpti_standard",
+        "bpti_high_samples",
+        "bpti_small_probe",
+        "bpti_large_probe",
+        "myoglobin_standard",
+        "myoglobin_high_samples",
+        "myoglobin_small_probe",
+        "myoglobin_large_probe"
     ])
     def test_against_vmd_reference_data(self, test_case, reference_data, convergence_tolerances):
         """Test against pre-generated VMD reference data for specific test case."""
@@ -37,11 +60,18 @@ class TestVMDReferenceComparison:
         n_samples = params.get('samples', 500)
 
         # Load test file and run our implementation
-        test_file = Path(__file__).parent / "resources" / f"test_{test_case}.xyz"
-        if not test_file.exists():
-            pytest.skip(f"Test file does not exist: {test_file}")
-
-        coords, radii = self._load_xyz_file(test_file)
+        # For lysozyme tests, use local test files
+        if test_case.startswith("lysozyme"):
+            test_file = Path(__file__).parent / "resources" / f"test_{test_case}.xyz"
+            if not test_file.exists():
+                pytest.skip(f"Test file does not exist: {test_file}")
+            coords, radii = self._load_xyz_file(test_file)
+        else:
+            # For diverse protein tests, use the input_file from reference data
+            input_file = params.get('input_file')
+            if not input_file or not Path(input_file).exists():
+                pytest.skip(f"Input file not found: {input_file}")
+            coords, radii = self._load_xyz_file(Path(input_file))
 
         our_sasa, our_points = sasa_ext.compute_sasa(
             coords, radii,
