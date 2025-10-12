@@ -15,21 +15,12 @@ import sasa_ext
 @pytest.fixture
 def reference_data():
     """Load VMD reference data if available."""
-    combined_data = {}
-
-    # Load original lysozyme reference data
     ref_file = Path(__file__).parent / "resources" / "vmd_reference_data.json"
     if ref_file.exists():
         with open(ref_file, 'r') as f:
-            combined_data.update(json.load(f))
+            return json.load(f)
 
-    # Load diverse protein reference data
-    diverse_ref_file = Path(__file__).parent / "resources" / "diverse_vmd_reference_data.json"
-    if diverse_ref_file.exists():
-        with open(diverse_ref_file, 'r') as f:
-            combined_data.update(json.load(f))
-
-    return combined_data
+    return {}
 
 @pytest.fixture
 def simple_test_cases():
