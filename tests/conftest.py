@@ -106,7 +106,7 @@ def sasa_parameters():
 def tolerances():
     """Tolerance values for different types of test comparisons."""
     return {
-        'area_relative': 0.06,       # 6% for total SASA area
+        'area_relative': 0.03,       # 3% for total SASA area
         'area_absolute': 1.0,        # 1.0 absolute tolerance
         'point_count_relative': 0.09, # 9% for point counts
         'reproducibility': 1e-10,    # Exact for same seed
