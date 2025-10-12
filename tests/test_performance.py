@@ -165,7 +165,7 @@ class TestPerformanceBenchmarks:
 class TestNumericalStability:
     """Test numerical stability and robustness."""
 
-    def test_repeated_computation_stability(self, convergence_tolerances):
+    def test_repeated_computation_stability(self, tolerances):
         """Test that repeated computations are stable."""
 
         coords = np.array([[0.0, 0.0, 0.0], [3.5, 0.0, 0.0]], dtype=np.float32)
@@ -181,7 +181,7 @@ class TestNumericalStability:
 
         # All results should be identical (same seed)
         for result in results[1:]:
-            assert abs(result - results[0]) < convergence_tolerances['reproducibility'], \
+            assert abs(result - results[0]) < tolerances['reproducibility'], \
                 "Results should be identical with same seed"
 
         # Now test with different seeds - should have low variance

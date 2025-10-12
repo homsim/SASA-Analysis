@@ -43,7 +43,7 @@ class TestVMDReferenceComparison:
         "myoglobin_small_probe",
         "myoglobin_large_probe"
     ])
-    def test_against_vmd_reference_data(self, test_case, reference_data, convergence_tolerances):
+    def test_against_vmd_reference_data(self, test_case, reference_data, tolerances):
         """Test against pre-generated VMD reference data for specific test case."""
 
         if not reference_data:
@@ -88,7 +88,7 @@ class TestVMDReferenceComparison:
 
         relative_error = abs(our_sasa - ref_sasa) / ref_sasa
 
-        assert relative_error < convergence_tolerances['area_relative'], (
+        assert relative_error < tolerances['area_relative'], (
             f"SASA mismatch for {test_case}: "
             f"ours={our_sasa:.2f}, ref={ref_sasa:.2f}, "
             f"error={relative_error*100:.2f}%"
@@ -99,14 +99,21 @@ class TestVMDReferenceComparison:
         if ref_points is not None:
             point_error = abs(len(our_points) - ref_points) / ref_points
 
-            assert point_error < convergence_tolerances['point_count_relative'], (
+            assert point_error < tolerances['point_count_relative'], (
                 f"Point count mismatch for {test_case}: "
                 f"ours={len(our_points)}, ref={ref_points}, "
                 f"error={point_error*100:.2f}%"
             )
 
-    def _load_xyz_file(self, xyz_file):
+    def _load_xyz_file(self, xyz_file, vdw_radii=None):
         """Load coordinates and radii from XYZ file."""
+        if vdw_radii is None:
+            # Default VdW radii if not provided
+            vdw_radii = {
+                'H': 1.20, 'C': 1.70, 'N': 1.55, 'O': 1.52,
+                'S': 1.80, 'P': 1.80, 'He': 1.40
+            }
+
         with open(xyz_file, 'r') as f:
             lines = f.readlines()
 
@@ -114,19 +121,13 @@ class TestVMDReferenceComparison:
         coords = []
         radii = []
 
-        # Element to radius mapping (VDW radii in Angstroms)
-        element_radii = {
-            'H': 1.20, 'C': 1.70, 'N': 1.55, 'O': 1.52,
-            'S': 1.80, 'P': 1.80, 'He': 1.40
-        }
-
         for i in range(2, 2 + n_atoms):
             parts = lines[i].strip().split()
             element = parts[0]
             x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
 
             coords.append([x, y, z])
-            radii.append(element_radii.get(element, 1.70))
+            radii.append(vdw_radii.get(element, 1.70))
 
         return np.array(coords, dtype=np.float32), np.array(radii, dtype=np.float32)
 
@@ -255,7 +256,7 @@ class TestParameterSweepAgainstExpectations:
         assert 1.5 < ratio_large_small < 10, \
             f"Probe radius effect seems unreasonable: {ratio_large_small:.2f}x"
 
-    def test_sample_count_convergence(self, convergence_tolerances):
+    def test_sample_count_convergence(self, tolerances):
         """Test that SASA converges with increasing sample count."""
 
         # Use a more complex geometry to ensure variance exists
@@ -297,7 +298,7 @@ class TestParameterSweepAgainstExpectations:
         # Mean should stabilize for large sample counts
         high_sample_means = sasa_values[-3:]  # Last 3 values
         coefficient_of_variation = np.std(high_sample_means) / np.mean(high_sample_means)
-        assert coefficient_of_variation < convergence_tolerances['convergence'], \
+        assert coefficient_of_variation < tolerances['convergence'], \
             f"SASA not converged at high sample counts: CV = {coefficient_of_variation:.4f}"
 
     def test_distance_dependence(self):
@@ -337,12 +338,12 @@ class TestParameterSweepAgainstExpectations:
 class TestIntegrationWithSASACoreModule:
     """Test integration between C extension and Python core module."""
 
-    def test_sasa_core_integration(self, test_xyz_files):
+    def test_sasa_core_integration(self, xyz_files):
         """Test that SASA core module works with C extension."""
         from sasa_lammps.sasa_core import parse_xyz_file, compute_sasa_from_xyz
 
         # Test with single atom file
-        xyz_file = test_xyz_files['single_atom']
+        xyz_file = xyz_files['single_atom']
         coords, radii = parse_xyz_file(str(xyz_file))
 
         # Test direct C extension call
@@ -360,16 +361,16 @@ class TestIntegrationWithSASACoreModule:
         points2_array = np.array(points2)
         np.testing.assert_array_almost_equal(points1, points2_array, decimal=6)
 
-    def test_xyz_parsing_accuracy(self, test_xyz_files, element_radii):
+    def test_xyz_parsing_accuracy(self, xyz_files, vdw_radii):
         """Test that XYZ file parsing assigns correct radii."""
         from sasa_lammps.sasa_core import parse_xyz_file
 
         # Test mixed elements file
-        xyz_file = test_xyz_files['mixed_elements']
+        xyz_file = xyz_files['mixed_elements']
         coords, radii = parse_xyz_file(str(xyz_file))
 
         expected_elements = ['C', 'H', 'N', 'O']
-        expected_radii = [element_radii[elem] for elem in expected_elements]
+        expected_radii = [vdw_radii[elem] for elem in expected_elements]
 
         assert len(coords) == 4, "Should parse 4 atoms"
         assert len(radii) == 4, "Should assign 4 radii"

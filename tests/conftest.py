@@ -23,85 +23,60 @@ def reference_data():
     return {}
 
 @pytest.fixture
-def simple_test_cases():
-    """Create simple test cases with known geometry."""
+def test_molecules():
+    """Standard test molecules with known geometric properties."""
     return {
         'single_atom': {
             'coords': np.array([[0.0, 0.0, 0.0]], dtype=np.float32),
             'radii': np.array([1.5], dtype=np.float32),
-            'expected_area_factor': 4 * np.pi  # For probe_radius=0
+            'area_factor': 4 * np.pi  # For probe_radius=0
         },
         'two_separated': {
             'coords': np.array([[0.0, 0.0, 0.0], [10.0, 0.0, 0.0]], dtype=np.float32),
             'radii': np.array([1.5, 1.5], dtype=np.float32),
-            'probe_radius': 1.4,
-            'expected_behavior': 'independent'  # Should act like two isolated atoms
+            'behavior': 'independent'
         },
-        'two_touching': {
+        'two_close': {
             'coords': np.array([[0.0, 0.0, 0.0], [3.0, 0.0, 0.0]], dtype=np.float32),
             'radii': np.array([1.5, 1.5], dtype=np.float32),
-            'probe_radius': 1.4,
-            'expected_behavior': 'reduced'  # SASA should be less than 2x single atom
+            'behavior': 'reduced'
         },
-        'buried_atom': {
+        'buried': {
             'coords': np.array([
                 [0.0, 0.0, 0.0],   # Central atom
-                [2.0, 0.0, 0.0],   # Surrounding atoms
-                [-2.0, 0.0, 0.0],
-                [0.0, 2.0, 0.0],
-                [0.0, -2.0, 0.0],
-                [0.0, 0.0, 2.0],
-                [0.0, 0.0, -2.0]
+                [2.0, 0.0, 0.0], [-2.0, 0.0, 0.0],
+                [0.0, 2.0, 0.0], [0.0, -2.0, 0.0],
+                [0.0, 0.0, 2.0], [0.0, 0.0, -2.0]
             ], dtype=np.float32),
             'radii': np.array([1.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], dtype=np.float32),
-            'probe_radius': 1.4,
-            'expected_behavior': 'central_buried'  # Central atom should be mostly buried
+            'behavior': 'central_buried'
         }
     }
 
 @pytest.fixture
-def test_xyz_files(tmp_path):
-    """Create test XYZ files for parsing tests."""
+def xyz_files(tmp_path):
+    """Standard XYZ files for testing."""
     files = {}
 
-    # Single atom
-    single_atom = tmp_path / "single_atom.xyz"
-    single_atom.write_text("1\nSingle carbon atom\nC 0.0 0.0 0.0\n")
-    files['single_atom'] = single_atom
+    # Basic test cases
+    files['single_atom'] = create_xyz_file(tmp_path, "single.xyz", [('C', 0.0, 0.0, 0.0)])
+    files['two_atoms'] = create_xyz_file(tmp_path, "two.xyz", [('C', 0.0, 0.0, 0.0), ('C', 5.0, 0.0, 0.0)])
+    files['mixed_elements'] = create_xyz_file(tmp_path, "mixed.xyz", [
+        ('C', 0.0, 0.0, 0.0), ('H', 1.0, 0.0, 0.0),
+        ('N', 0.0, 1.0, 0.0), ('O', 0.0, 0.0, 1.0)
+    ])
 
-    # Two atoms
-    two_atoms = tmp_path / "two_atoms.xyz"
-    two_atoms.write_text("2\nTwo carbon atoms\nC 0.0 0.0 0.0\nC 5.0 0.0 0.0\n")
-    files['two_atoms'] = two_atoms
-
-    # Mixed elements
-    mixed = tmp_path / "mixed_elements.xyz"
-    mixed.write_text("""4
-Mixed element molecule
-C 0.0 0.0 0.0
-H 1.0 0.0 0.0
-N 0.0 1.0 0.0
-O 0.0 0.0 1.0
-""")
-    files['mixed_elements'] = mixed
-
-    # Large molecule (for performance tests)
-    large = tmp_path / "large_molecule.xyz"
-    n_atoms = 100
-    content = f"{n_atoms}\nLarge test molecule\n"
-    for i in range(n_atoms):
-        # Random coordinates in a 20x20x20 box
-        x, y, z = np.random.rand(3) * 20 - 10
-        element = np.random.choice(['C', 'N', 'O', 'H'])
-        content += f"{element} {x:.6f} {y:.6f} {z:.6f}\n"
-    large.write_text(content)
-    files['large_molecule'] = large
+    # Performance test case
+    np.random.seed(42)  # Reproducible
+    large_atoms = [(np.random.choice(['C', 'N', 'O', 'H']),
+                   *np.random.uniform(-10, 10, 3)) for _ in range(100)]
+    files['large_molecule'] = create_xyz_file(tmp_path, "large.xyz", large_atoms)
 
     return files
 
 @pytest.fixture
-def element_radii():
-    """Expected VdW radii for testing radius assignment."""
+def vdw_radii():
+    """Standard van der Waals radii for elements (in Angstroms)."""
     return {
         'H': 1.20,
         'C': 1.70,
@@ -111,6 +86,7 @@ def element_radii():
         'P': 1.80,
         'F': 1.47,
         'Cl': 1.75,
+        'He': 1.40,
         'Unknown': 1.70  # Default
     }
 
@@ -127,45 +103,62 @@ def sasa_parameters():
     }
 
 @pytest.fixture
-def convergence_tolerances():
-    """Tolerance values for different types of comparisons."""
+def tolerances():
+    """Tolerance values for different types of test comparisons."""
     return {
-        'area_relative': 0.06,       # 6% for total SASA area (realistic for Monte Carlo, especially small probes)
+        'area_relative': 0.06,       # 6% for total SASA area
         'area_absolute': 1.0,        # 1.0 absolute tolerance
-        'point_count_relative': 0.09, # 9% for point counts (accounts for complex proteins like BPTI)
+        'point_count_relative': 0.09, # 9% for point counts
         'reproducibility': 1e-10,    # Exact for same seed
         'convergence': 0.02,         # 2% for sample convergence
         'geometric': 0.01            # 1% for geometric relationships
     }
 
-def create_test_molecule_xyz(coords, elements, filename):
-    """Helper function to create XYZ files from coordinates and elements."""
-    content = f"{len(coords)}\nTest molecule\n"
-    for elem, coord in zip(elements, coords):
-        content += f"{elem} {coord[0]:.6f} {coord[1]:.6f} {coord[2]:.6f}\n"
+def create_xyz_file(tmp_path, filename, atoms):
+    """Create an XYZ file from atom data.
 
-    with open(filename, 'w') as f:
-        f.write(content)
+    Args:
+        tmp_path: pytest tmp_path fixture
+        filename: name of file to create
+        atoms: list of (element, x, y, z) tuples
+    """
+    filepath = tmp_path / filename
+    content = f"{len(atoms)}\nTest molecule\n"
+    for elem, x, y, z in atoms:
+        content += f"{elem} {x:.6f} {y:.6f} {z:.6f}\n"
+    filepath.write_text(content)
+    return filepath
 
-    return filename
+def load_xyz_file(filepath, vdw_radii=None):
+    """Load coordinates and radii from XYZ file.
 
-def load_xyz_file(filepath):
-    """Helper function to load coordinates and elements from XYZ file."""
+    Args:
+        filepath: path to XYZ file
+        vdw_radii: dict of element -> radius mapping
+
+    Returns:
+        (coords, radii) as numpy arrays
+    """
+    if vdw_radii is None:
+        vdw_radii = {
+            'H': 1.20, 'C': 1.70, 'N': 1.55, 'O': 1.52,
+            'S': 1.80, 'P': 1.80, 'F': 1.47, 'Cl': 1.75,
+            'He': 1.40
+        }
+
     with open(filepath, 'r') as f:
         lines = f.readlines()
 
     n_atoms = int(lines[0].strip())
     coords = []
-    elements = []
+    radii = []
 
     for i in range(2, 2 + n_atoms):
         parts = lines[i].strip().split()
-        elements.append(parts[0])
-        coords.append([float(parts[1]), float(parts[2]), float(parts[3])])
+        element = parts[0]
+        x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
 
-    return np.array(coords, dtype=np.float32), elements
+        coords.append([x, y, z])
+        radii.append(vdw_radii.get(element, 1.70))
 
-@pytest.fixture
-def xyz_loader():
-    """Provide the XYZ loading function as a fixture."""
-    return load_xyz_file
+    return np.array(coords, dtype=np.float32), np.array(radii, dtype=np.float32)

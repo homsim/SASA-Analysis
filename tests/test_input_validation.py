@@ -228,7 +228,7 @@ class TestEdgeCases:
         assert sasa > 0
         assert len(points) > 0
 
-    def test_very_large_probe(self, convergence_tolerances):
+    def test_very_large_probe(self, tolerances):
         """Test with probe radius much larger than atoms."""
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
@@ -243,7 +243,7 @@ class TestEdgeCases:
         expected_area = 4 * np.pi * expected_radius**2
 
         relative_error = abs(sasa - expected_area) / expected_area
-        assert relative_error < convergence_tolerances["area_relative"], f"Large probe radius error: {relative_error*100:.2f}%"
+        assert relative_error < tolerances["area_relative"], f"Large probe radius error: {relative_error*100:.2f}%"
 
     def test_memory_stress(self):
         """Test with configurations that stress memory usage."""

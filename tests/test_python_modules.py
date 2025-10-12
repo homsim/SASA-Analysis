@@ -15,62 +15,62 @@ from pathlib import Path
 class TestSASACoreModule:
     """Test the SASA core Python module."""
 
-    def test_xyz_parsing(self, test_xyz_files, element_radii):
+    def test_xyz_parsing(self, xyz_files, vdw_radii):
         """Test XYZ file parsing functionality."""
         from sasa_lammps.sasa_core import parse_xyz_file
 
         # Test single atom
-        coords, radii = parse_xyz_file(str(test_xyz_files['single_atom']))
+        coords, radii = parse_xyz_file(str(xyz_files['single_atom']))
         assert coords.shape == (1, 3), "Should parse single atom coordinates"
         assert radii.shape == (1,), "Should assign single radius"
-        assert radii[0] == element_radii['C'], "Should assign carbon radius"
+        assert radii[0] == vdw_radii['C'], "Should assign carbon radius"
         np.testing.assert_array_almost_equal(coords[0], [0.0, 0.0, 0.0])
 
         # Test two atoms
-        coords, radii = parse_xyz_file(str(test_xyz_files['two_atoms']))
+        coords, radii = parse_xyz_file(str(xyz_files['two_atoms']))
         assert coords.shape == (2, 3), "Should parse two atom coordinates"
         assert radii.shape == (2,), "Should assign two radii"
         expected_coords = np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 0.0]], dtype=np.float32)
         np.testing.assert_array_almost_equal(coords, expected_coords)
 
         # Test mixed elements
-        coords, radii = parse_xyz_file(str(test_xyz_files['mixed_elements']))
+        coords, radii = parse_xyz_file(str(xyz_files['mixed_elements']))
         assert coords.shape == (4, 3), "Should parse four atoms"
         expected_radii = np.array([
-            element_radii['C'], element_radii['H'],
-            element_radii['N'], element_radii['O']
+            vdw_radii['C'], vdw_radii['H'],
+            vdw_radii['N'], vdw_radii['O']
         ], dtype=np.float32)
         np.testing.assert_array_almost_equal(radii, expected_radii)
 
-    def test_vdw_radius_assignment(self, element_radii):
+    def test_vdw_radius_assignment(self, vdw_radii):
         """Test VdW radius assignment for different elements."""
         from sasa_lammps.sasa_core import get_vdw_radius
 
         # Test known elements
-        for element, expected_radius in element_radii.items():
+        for element, expected_radius in vdw_radii.items():
             if element != 'Unknown':  # Skip the default case
                 assert get_vdw_radius(element) == expected_radius, \
                     f"Wrong radius for {element}"
 
         # Test case insensitivity
-        assert get_vdw_radius('c') == element_radii['C']
-        assert get_vdw_radius('carbon') == element_radii['C']  # Should fall back to 'C'
+        assert get_vdw_radius('c') == vdw_radii['C']
+        assert get_vdw_radius('carbon') == vdw_radii['C']  # Should fall back to 'C'
 
         # Test unknown elements
-        assert get_vdw_radius('Unobtainium') == element_radii['Unknown']
-        assert get_vdw_radius('X') == element_radii['Unknown']
+        assert get_vdw_radius('Unobtainium') == vdw_radii['Unknown']
+        assert get_vdw_radius('X') == vdw_radii['Unknown']
 
         # Test element symbols with numbers (common in PDB files)
-        assert get_vdw_radius('C1') == element_radii['C']
-        assert get_vdw_radius('N2') == element_radii['N']
+        assert get_vdw_radius('C1') == vdw_radii['C']
+        assert get_vdw_radius('N2') == vdw_radii['N']
 
-    def test_compute_sasa_from_xyz(self, test_xyz_files):
+    def test_compute_sasa_from_xyz(self, xyz_files):
         """Test the complete XYZ to SASA computation pipeline."""
         from sasa_lammps.sasa_core import compute_sasa_from_xyz
 
         # Test with single atom
         total_sasa, surface_points = compute_sasa_from_xyz(
-            str(test_xyz_files['single_atom']),
+            str(xyz_files['single_atom']),
             srad=1.4, samples=500, points=True
         )
 
@@ -80,20 +80,20 @@ class TestSASACoreModule:
 
         # Test without points
         total_sasa2, surface_points2 = compute_sasa_from_xyz(
-            str(test_xyz_files['single_atom']),
+            str(xyz_files['single_atom']),
             srad=1.4, samples=500, points=False
         )
 
         assert abs(total_sasa - total_sasa2) < 1e-6, "SASA should be same regardless of points flag"
         assert surface_points2 is None, "Should not return points when points=False"
 
-    def test_create_sasa_xyz_function(self, test_xyz_files, tmp_path):
+    def test_create_sasa_xyz_function(self, xyz_files, tmp_path):
         """Test the SASA XYZ creation function."""
         from sasa_lammps.sasa_core import _create_sasa_xyz
         from sasa_lammps.constants import SASAXYZ
 
         # Copy test file to temporary directory
-        test_file = test_xyz_files['two_atoms']
+        test_file = xyz_files['two_atoms']
         temp_xyz = tmp_path / "test.xyz"
         temp_xyz.write_text(test_file.read_text())
 
@@ -171,12 +171,12 @@ class TestConversionModuleIntegration:
                 f"Unexpected import error: {e}"
 
     @pytest.mark.skipif(True, reason="Requires full package installation with dependencies")
-    def test_create_sasa_xyz_integration(self, test_xyz_files, tmp_path):
+    def test_create_sasa_xyz_integration(self, xyz_files, tmp_path):
         """Test the integrated _create_sasa_xyz function."""
         from sasa_lammps.conversion import _create_sasa_xyz
 
         # Copy test file to temporary directory
-        test_file = test_xyz_files['single_atom']
+        test_file = xyz_files['single_atom']
         temp_xyz = tmp_path / "test.xyz"
         temp_xyz.write_text(test_file.read_text())
 

@@ -15,7 +15,7 @@ class TestSpherePointGeneration:
     """Test sphere point generation specifically."""
 
     @pytest.mark.parametrize("r", [1.0, 2.0, 10.0])
-    def test_sphere_point_uniformity(self, convergence_tolerances, r):
+    def test_sphere_point_uniformity(self, tolerances, r):
         """Test that sphere points are uniformly distributed. Parametrized the radii."""
 
         # Test with single atom at origin, zero probe radius
@@ -33,10 +33,10 @@ class TestSpherePointGeneration:
 
         # Check that all points are approximately on the sphere surface
         radius_errors = np.abs(distances - expected_radius)
-        assert np.max(radius_errors) < convergence_tolerances["geometric"], "Points should be on sphere surface"
+        assert np.max(radius_errors) < tolerances["geometric"], "Points should be on sphere surface"
 
     @pytest.mark.parametrize("r", [1.0, 2.0, 10.0])
-    def test_sphere_point_distribution_statistical(self, convergence_tolerances, r):
+    def test_sphere_point_distribution_statistical(self, tolerances, r):
         """Test uniform distribution using statistical tests. Parametrized the radii."""
 
         coords = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
@@ -53,12 +53,12 @@ class TestSpherePointGeneration:
         # Test z-coordinates are uniform in [-1, 1]
         z_coords = normalized_points[:, 2]
         _, p_value_z = stats.kstest(z_coords, lambda x: (x + 1) / 2)  # CDF for uniform[-1,1]
-        assert p_value_z > convergence_tolerances["geometric"], f"Z-coordinates not uniform (p={p_value_z:.4f})"
+        assert p_value_z > tolerances["geometric"], f"Z-coordinates not uniform (p={p_value_z:.4f})"
 
         # Test phi angles are uniform in [0, 2π]
         phi = np.arctan2(normalized_points[:, 1], normalized_points[:, 0]) + np.pi
         _, p_value_phi = stats.kstest(phi, lambda x: x / (2 * np.pi))  # CDF for uniform[0,2π]
-        assert p_value_phi > convergence_tolerances["geometric"], f"Phi angles not uniform (p={p_value_phi:.4f})"
+        assert p_value_phi > tolerances["geometric"], f"Phi angles not uniform (p={p_value_phi:.4f})"
 
     @pytest.mark.parametrize("n_samples", [100, 500, 1000])
     def test_sphere_point_count(self, n_samples):
@@ -78,10 +78,10 @@ class TestSpherePointGeneration:
 class TestCoreSASAAlgorithm:
     """Test core SASA computation functionality."""
 
-    def test_single_atom_analytical(self, convergence_tolerances, simple_test_cases):
+    def test_single_atom_analytical(self, tolerances, test_molecules):
         """Test single atom case against analytical result."""
 
-        case = simple_test_cases['single_atom']
+        case = test_molecules['single_atom']
 
         # For probe_radius=0, should get exactly 4πr²
         total_sasa, surface_points = sasa_ext.compute_sasa(
@@ -89,48 +89,48 @@ class TestCoreSASAAlgorithm:
             probe_radius=0.0, n_samples=5000, seed=42
         )
 
-        expected_area = case['expected_area_factor'] * (case['radii'][0] ** 2)
+        expected_area = case['area_factor'] * (case['radii'][0] ** 2)
         relative_error = abs(total_sasa - expected_area) / expected_area
 
-        assert relative_error < convergence_tolerances["area_relative"], f"Single atom SASA error too large: {relative_error*100:.2f}%"
+        assert relative_error < tolerances["area_relative"], f"Single atom SASA error too large: {relative_error*100:.2f}%"
         assert len(surface_points) > 0, "Should generate surface points"
 
-    def test_two_atoms_geometry(self, simple_test_cases):
+    def test_two_atoms_geometry(self, test_molecules):
         """Test geometric behavior with two atoms."""
 
-        separated = simple_test_cases['two_separated']
-        touching = simple_test_cases['two_touching']
+        separated = test_molecules['two_separated']
+        touching = test_molecules['two_close']
 
         # Test separated atoms
         sasa_sep, _ = sasa_ext.compute_sasa(
             separated['coords'], separated['radii'],
-            probe_radius=separated['probe_radius'], n_samples=1000, seed=42
+            probe_radius=1.4, n_samples=1000, seed=42
         )
 
         # Test touching atoms
         sasa_touch, _ = sasa_ext.compute_sasa(
             touching['coords'], touching['radii'],
-            probe_radius=touching['probe_radius'], n_samples=1000, seed=42
+            probe_radius=1.4, n_samples=1000, seed=42
         )
 
         # Touching atoms should have less SASA than separated
         assert sasa_touch < sasa_sep, "Touching atoms should have less SASA than separated"
 
-    def test_buried_atom_configuration(self, simple_test_cases):
+    def test_buried_atom_configuration(self, test_molecules):
         """Test atom burial in crowded environment."""
 
-        case = simple_test_cases['buried_atom']
+        case = test_molecules['buried']
 
         total_sasa, _ = sasa_ext.compute_sasa(
             case['coords'], case['radii'],
-            probe_radius=case['probe_radius'], n_samples=1000, seed=42
+            probe_radius=1.4, n_samples=1000, seed=42
         )
 
         # Central atom should contribute very little to total SASA
         # Test by computing single central atom SASA for comparison
         central_sasa, _ = sasa_ext.compute_sasa(
             case['coords'][:1], case['radii'][:1],
-            probe_radius=case['probe_radius'], n_samples=1000, seed=42
+            probe_radius=1.4, n_samples=1000, seed=42
         )
 
         # In crowded environment, total should be much less than sum of isolated atoms
@@ -138,7 +138,7 @@ class TestCoreSASAAlgorithm:
         for i in range(len(case['coords'])):
             isolated_sasa, _ = sasa_ext.compute_sasa(
                 case['coords'][i:i+1], case['radii'][i:i+1],
-                probe_radius=case['probe_radius'], n_samples=1000, seed=42
+                probe_radius=1.4, n_samples=1000, seed=42
             )
             all_isolated_sasa += isolated_sasa
 
@@ -146,10 +146,10 @@ class TestCoreSASAAlgorithm:
         # the 0.7 here is arbitrary...
         assert burial_ratio < 0.7, f"Burial effect insufficient: {burial_ratio:.2f}"
 
-    def test_parameter_effects(self, convergence_tolerances, simple_test_cases, sasa_parameters):
+    def test_parameter_effects(self, tolerances, test_molecules, sasa_parameters):
         """Test that parameters have expected effects."""
 
-        case = simple_test_cases['single_atom']
+        case = test_molecules['single_atom']
 
         # Test probe radius effect
         sasa_small, _ = sasa_ext.compute_sasa(
@@ -177,12 +177,12 @@ class TestCoreSASAAlgorithm:
 
         # Should converge to similar values
         relative_diff = abs(sasa_many - sasa_few) / sasa_many
-        assert relative_diff < convergence_tolerances["area_relative"], f"Poor convergence with sample count: {relative_diff*100:.2f}%"
+        assert relative_diff < tolerances["area_relative"], f"Poor convergence with sample count: {relative_diff*100:.2f}%"
 
-    def test_reproducibility(self, simple_test_cases, convergence_tolerances):
+    def test_reproducibility(self, test_molecules, tolerances):
         """Test that results are reproducible with same seed."""
 
-        case = simple_test_cases['single_atom']
+        case = test_molecules['single_atom']
 
         # Run multiple times with same seed
         results = []
@@ -196,13 +196,13 @@ class TestCoreSASAAlgorithm:
         # All results should be identical
         first_result = results[0]
         for result in results[1:]:
-            assert abs(result[0] - first_result[0]) < convergence_tolerances['reproducibility'], \
+            assert abs(result[0] - first_result[0]) < tolerances['reproducibility'], \
                 "SASA should be reproducible with same seed"
             assert result[1] == first_result[1], \
                 "Point count should be reproducible with same seed"
 
     @pytest.mark.parametrize("scale_factor", [2.0, 3.0, 4.0, 5.0])
-    def test_scaling_invariance(self, convergence_tolerances, scale_factor):
+    def test_scaling_invariance(self, tolerances, scale_factor):
         """Test that SASA scales correctly with coordinate scaling. Parametrized the scaling factor."""
 
         # Original configuration
@@ -228,7 +228,7 @@ class TestCoreSASAAlgorithm:
         expected_sasa = original_sasa * (scale_factor ** 2)
         relative_error = abs(scaled_sasa - expected_sasa) / expected_sasa
 
-        assert relative_error < convergence_tolerances["geometric"], f"Scaling invariance violated: {relative_error*100:.2f}% error"
+        assert relative_error < tolerances["geometric"], f"Scaling invariance violated: {relative_error*100:.2f}% error"
 
 
 class TestNeighborListConstruction:
