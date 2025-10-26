@@ -170,7 +170,6 @@ class TestConversionModuleIntegration:
             assert any(dep in str(e).lower() for dep in ["ovito", "sasa_ext", "sasa_core"]), \
                 f"Unexpected import error: {e}"
 
-    @pytest.mark.skipif(True, reason="Requires full package installation with dependencies")
     def test_create_sasa_xyz_integration(self, xyz_files, tmp_path):
         """Test the integrated _create_sasa_xyz function."""
         from sasa_lammps.conversion import _create_sasa_xyz

@@ -8,7 +8,7 @@ This package uses a custom C extension for SASA calculations and can be installe
 
 ## Requirements
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - A C compiler (gcc, clang)
 - Python development headers
 
@@ -25,19 +25,18 @@ source ~/venv/sasa/bin/activate
 From this projects root directory install the package with all dependencies
 ```
 pip install .
-# Or if you also want to execute the tests:
-pip install ".[test]"
 ```
 
 ## Verification
 
-After installation, you can either verify that the SASA extension is loaded correctly:
+After installation, you can either verify that the SASA extension is loaded correctly (tp not confuse python with the local `sasa_ext` directory, execute this from any other than the source-file directory):
 ```bash
-python -c "import sasa_ext; print('✓ SASA extension loaded successfully')"
+cd && python -c "import sasa_ext; print('✓ SASA extension loaded successfully')"
 ```
 
-or/and execute the tests in the `tests` directory:
+or/and execute the tests in the `tests` directory. This requires the installation of the test-requirements and the install in editable mode:
 ```bash
+pip install -e ".[test]"
 pytest ./tests
 ```
 

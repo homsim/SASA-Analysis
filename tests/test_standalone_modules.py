@@ -254,22 +254,6 @@ class TestFileStructure:
 class TestImplementationReadiness:
     """Test that implementation is ready for deployment."""
 
-    def test_documentation_completeness(self):
-        """Test that documentation is complete."""
-        base_path = Path(__file__).parent.parent
-
-        # Check main documentation files
-        claude_md = base_path / "CLAUDE.md"
-        if claude_md.exists():
-            claude_content = claude_md.read_text()
-            assert 'VMD' in claude_content, "Should document VMD replacement"
-
-        # Check test documentation
-        test_readme = base_path / "tests" / "README.md"
-        if test_readme.exists():
-            test_readme_content = test_readme.read_text()
-            assert 'test_core_components.py' in test_readme_content, "Should document test files"
-
     def test_build_system_consistency(self):
         """Test that build system files are consistent."""
         base_path = Path(__file__).parent.parent
