@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "numpy>=1.15.0"]
+requires = ["setuptools>=80.9.0", "wheel", "numpy>=2.3.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "sasa_lammps"
-version = "0.3.0"
+version = "0.4.0"
 description = "LAMMPS-based solvent accessible surface area analysis"
 authors = [{name = "Hanna-Friederike Poggemann"}, {name = "Simon Homann"}]
 license = {text = "MIT"}
@@ -24,10 +24,21 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-    "numpy>=1.15.0",
-    "ovito>=3.0.0",
-    "tqdm",
+    "numpy>=2.3.0",
+    "ovito>=3.14.0",
+    "pandas>=2.3.0",
+    "tqdm>=4.67.0",
+    "scipy>=1.14.0",
+    "matplotlib>=3.10.0",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=6.0.0"]
+test = ["pytest>=8.0.0"]
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["."]
+

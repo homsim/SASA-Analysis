@@ -1,16 +1,10 @@
-"""SASA-Analysis
+# Minimal setup.py for C extension building only
+# Main configuration is in pyproject.toml
 
-Repeatedly executes LAMMPS instances to probe the solvent-accessible surface-area
-of a given macromolecule in order to create an energy landscape of that molecule.
-"""
-
-
-DOCSTRING = __doc__.split("\n")
-
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, Extension
 
 def get_extensions():
-    """Build C extensions, importing numpy only when needed."""
+    """Build C extensions with NumPy 2.0 compatibility."""
     try:
         import numpy
         sasa_ext = Extension(
@@ -24,6 +18,7 @@ def get_extensions():
                 'sasa_ext'
             ],
             extra_compile_args=['-O3', '-std=c99'],
+            define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
             language='c'
         )
         return [sasa_ext]
@@ -33,36 +28,8 @@ def get_extensions():
         print("Warning: NumPy not found during setup. Extension will be built later.")
         return []
 
-requirements = [
-    'numpy>=1.15.0',
-    'ovito>=3.0.0',
-    'tqdm',
-]
-
+# Setup only handles C extensions
+# All other configuration is in pyproject.toml
 setup(
-    name="sasa_lammps",
-    version="0.3.0",
-    author="SASA-Analysis Contributors",
-    description="LAMMPS-based solvent accessible surface area analysis",
-    long_description=__doc__,
-    install_requires=requirements,
-    include_package_data=True,
-    packages=find_packages(),
     ext_modules=get_extensions(),
-    setup_requires=['numpy>=1.15.0'],
-    zip_safe=False,
-    python_requires='>=3.8',
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Topic :: Scientific/Engineering :: Chemistry',
-        'Topic :: Scientific/Engineering :: Physics',
-    ],
 )

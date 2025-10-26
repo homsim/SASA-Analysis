@@ -20,9 +20,13 @@ It is recommended to use a python environment.
 python -m venv ~/venv/sasa
 # Activate your Python environment
 source ~/venv/sasa/bin/activate
+```
 
-# From this projects root directory install the package with all dependencies
-pip install -e .
+From this projects root directory install the package with all dependencies
+```
+pip install .
+# Or if you also want to execute the tests:
+pip install ".[test]"
 ```
 
 ## Verification
