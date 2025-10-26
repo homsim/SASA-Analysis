@@ -251,13 +251,7 @@ class TestPackageStructure:
 
     def test_package_version_consistency(self):
         """Test that package version is consistently defined."""
-        # Check setup.py for version
-        setup_py_path = Path(__file__).parent.parent / "setup.py"
-        if setup_py_path.exists():
-            setup_content = setup_py_path.read_text()
-            assert 'version=' in setup_content, "setup.py should have version"
-
-        # Check pyproject.toml for version
+        # Check pyproject.toml for version (modern packaging)
         pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
         if pyproject_path.exists():
             pyproject_content = pyproject_path.read_text()
