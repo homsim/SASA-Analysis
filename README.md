@@ -134,7 +134,15 @@ dump            traj all custom 1 traj.lmp id mol type element x y z vx vy vz q
 dump_modify     traj append yes element H C N O S 
 """
 # Run sasa (lammps_exe is now optional)
+
 sasa(gro_file, data_file, mol_file, ff_str, dump_str)
 # Or with custom LAMMPS executable:
 # sasa(gro_file, data_file, mol_file, ff_str, dump_str, lammps_exe)
 ```
+
+# Citations
+
+1. H.-F. Poggemann et al., “Phenylalanine modification in plasma-driven biocatalysis revealed by solvent accessibility and reactive dynamics in combination with protein mass spectrometry,” The Journal of Physical Chemistry B, 2025, doi: 10.1021/acs.jpcb.5c03518. (https://pubs.acs.org/doi/10.1021/acs.jpcb.5c03518)
+2. A. P. Thompson et al., “LAMMPS - a flexible simulation tool for particle-based materials modeling at the atomic, meso, and continuum scales,” Computer Physics Communications, vol. 271, p. 108171, Feb. 2022, doi: 10.1016/j.cpc.2021.108171. (https://doi.org/10.1016/j.cpc.2021.108171)
+3. A. Stukowski, “Visualization and analysis of atomistic simulation data with OVITO–the Open Visualization Tool,” Modelling and Simulation in Materials Science and Engineering, vol. 18, no. 1, p. 15012, Dec. 2009, doi: 10.1088/0965-0393/18/1/015012. (https://iopscience.iop.org/article/10.1088/0965-0393/18/1/015012)
+
