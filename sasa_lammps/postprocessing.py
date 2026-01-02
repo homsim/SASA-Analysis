@@ -1,4 +1,4 @@
-# general
+# General
 import os
 import re
 import numpy as np
@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
-# ovito specifics
+# Ovito specifics
 from ovito.io import *
 from ovito.modifiers import *
 from ovito.data import *
@@ -124,7 +124,7 @@ def residue_analysis(path, SASA_outfile, residuelist):
     res = pd.read_csv(os.path.join(path, residuelist), sep='\s+',)
     # sort by lowest energy and identify and remove dublicates of the same residue
     sort= df.sort_values('eint/eV', ascending=True).reset_index(drop=True)
-    # only take the 15 lowest
+    # only take the 30 lowest
     emin=sort.drop_duplicates(subset=['res']).iloc[0:30]
     for item in emin['res']:
         loc= res.isin([item]).any(axis=1).idxmax()
@@ -135,26 +135,24 @@ def residue_analysis(path, SASA_outfile, residuelist):
     res_names=res['ResType'].reset_index(drop=True)
     res_names = res_names.value_counts()
     count = emin['res'].value_counts()
-    # get normalized results, attack amount/amount of residue
-    result = {'labels': [], 'total':[], 'percent': [],}
+    # get normalized results, attack amount/total amount of residue type in the protein
+    result = {'labels': [], 'total':[], 'enrichment': [],}
     for item in count.index:
-        result['percent'].append(float(count[item]/res_names[item]))
         result['total'].append(count[item])
         result['labels'].append(str(item))
+        # Calculate relative values/enrichment as explained in the publication
+        expectation_value = (res_names[item]/res.count()[0])*30
+        enrichment = count[item] / expectation_value
+        result['enrichment'].append(float(enrichment))
     # export attack amount vs residue to file
-    pd.DataFrame(result).to_csv('./residue_interaction_probability.txt', sep='\t', index=False)
-    return result 
-    
-    '''
-    drop outliners if there are some
-    emin = emin.drop([14])
-    emin
-    have to include that in a way that makes sense somehow
-    '''
+    pd.DataFrame(result).to_csv(os.path.join(path,'interaction_probability.txt'), sep='\t', 
+            index=False)
+    return result
 
-def residue_analysis_plot(path, result):
+def residue_analysis_all_res(path, result):
+    # LOAD AND PREPARE
     result = pd.DataFrame(result).sort_values('labels', ascending=True)
-    # create color list with fixed color for each residue
+    ## Create color list with fixed color for each residue
     colors={'ALA': '#d6a090',
         'ARG': '#fe3b1e',
         'ASN': '#a12c32',
@@ -165,10 +163,7 @@ def residue_analysis_plot(path, result):
         'GLU': '#11963b',
         'GLY': '#051155',
         'HEM': '#4f02ec',
-        'HIS': 'k', 
-        'HISD': '#2d69cb',
-        'HISE': '#00a6ee',
-        'HISH': '#6febff',
+        'HIS': '#2d69cb',
         'ILE': '#08a29a',
         'LEU': '#2a666a',
         'LYS': '#063619',
@@ -180,25 +175,76 @@ def residue_analysis_plot(path, result):
         'THR': '#acbe9c',
         'TRP': '#827c70',
         'TYR': '#5a3b1c',
-        'VAL': '#ae6507'}   
-    #plot attack amount vs residue
-    fig, ax = plt.subplots(1)
-    fig.set_size_inches(10, 5)
-    ## plot bars ##
-    ax.bar(result['labels'],result['total'],edgecolor='black', 
-            color=[colors[key] for key in result['labels']])
-    #layout
-    ax.set_ylabel('$n$ total interactions',fontsize=18)
-    ax.set_xlabel('residue',fontsize=18)
-    ## increase line thickness box and ticks      
+        'VAL': '#ae6507'}
+    labels={'ALA': 'Ala',
+        'ARG': 'Arg',
+        'ASN': 'Asn',
+        'ASP': 'Asp',
+        'CYM': 'Cym',
+        'CYS': 'Cys',
+        'GLN': 'Gln',
+        'GLU': 'Glu',
+        'GLY': 'Gly',
+        'HEM': 'Heme',
+        'HIS': 'His',
+        'ILE': 'Ile',
+        'LEU': 'Leu',
+        'LYS': 'Lys',
+        'MET': 'Met',
+        'MG': 'Mg',
+        'PHE': 'Phe',
+        'PRO': 'Pro',
+        'SER': 'Ser',
+        'THR': 'Thr',
+        'TRP': 'Trp',
+        'TYR': 'Tyr',
+        'VAL': 'Val'}
+    ## Add all res names to results and add zeros 
+    result_keys = set(result["labels"])
+    labels_keys = set(labels.keys())
+    diff = labels_keys.difference(result_keys)
+    df = pd.DataFrame({key: [0.0] for key in diff}).T.reset_index()
+    r1 = result['labels'].append(df['index']).reset_index(drop=True)
+    r2 = result['total'].append(df[0]).reset_index(drop=True)
+    r3 = result['enrichment'].append(df[0]).reset_index(drop=True)
+    r = pd.concat([r1,r2], axis = 1,).rename(columns={0 : 'labels', 1 : 'total'}).sort_values('labels', ascending=True)
+    s = pd.concat([r1,r3], axis = 1,).rename(columns={0 : 'labels', 1 : 'enrichment'}).sort_values('labels', ascending=True)
+    # PLOT: attack amount vs residue
+    fig, ax = plt.subplots(2, 1, sharex=True)
+    ## Remove horizontal space between axes
+    fig.subplots_adjust(hspace=0)
+    fig.set_size_inches(10,7)
+    fig.supylabel('Interactions with rmdPGS',fontsize=24, x=-0.05, fontweight='bold')
+    ## Plot bars
+    ax[1].bar(r['labels'],r['total'],edgecolor='black', 
+            color=[colors[key] for key in r['labels']], label = '$n$ total', width = 0.6)
+    # LAYOUT
+    ax[1].margins(x=0.01)
+    ax[1].set_ylabel('$n$ total',fontsize=24, labelpad=10)
+    ax[1].set_xlabel('residue',fontsize=24, )
+    ## Increase line thickness box and ticks      
     for axis in ['top','bottom','left','right']:
-        ax.spines[axis].set_linewidth(1.5)
-    ax.tick_params(labelsize=16, width=1.5, length=6, bottom=True, left=True, right=True,)
-    for tick in ax.get_xticklabels():
-        tick.set_rotation(45)
-    ## minor ticks
-    #ax.minorticks_on()
-    ax.tick_params(which='minor',width=1, length=6, right=True,)
-    #save
-    plt.savefig(os.path.join(path, 'total_residue_attack.png'), dpi = 300, bbox_inches='tight')
-    #plt.show()
+        ax[1].spines[axis].set_linewidth(1.5)
+    ax[1].tick_params(labelsize=24, width=1.5, length=8, bottom=True, left=True, right=True,)
+    for tick in ax[1].get_xticklabels():
+        tick.set_rotation(90)
+    ax[1].set_xticklabels([labels[key] for key in r['labels']], fontsize=22)
+    ## Minor ticks
+    ax[1].minorticks_on()
+    ax[1].tick_params(which='minor',width=1, length=6, right=True, bottom=False)
+    ax[1].set_ylim(0,7)
+    ## Plot bars 2
+    ax[0].bar(s['labels'],s['enrichment'],edgecolor='black', 
+            color=[colors[key] for key in r['labels']], label = 'relative / %', width = 0.6)
+    ax[0].margins(x=0.01)
+    ax[0].set_ylabel('relative',fontsize=24, labelpad=40)
+    ax[0].set_xlabel('residue',fontsize=24)
+    ## Increase line thickness box and ticks      
+    for axis in ['top','bottom','left','right']:
+        ax[0].spines[axis].set_linewidth(1.5)
+    ax[0].tick_params(labelsize=24, width=1.5, length=8, bottom=True, left=True, right=True,)
+    ax[0].tick_params(which='minor',width=1, length=6, right=True,)
+    ax[0].minorticks_on()
+    # SAVE
+    plt.savefig(os.path.join(path, 'attack_vs_residue_enrichment.png'), dpi = 300, bbox_inches='tight')
+    plt.show()
