@@ -1,30 +1,44 @@
+# Overview
+
+This package calcukates the solvent-accesible surface analysis (SASA) on a given macro-molecule. It places a given probe-molecule on the surface points to compute a 3D interaction energy surface. The potential energy is calculated with a ReaxFF potential that needs to be provided (see below) and uses [LAMMPS](https://www.lammps.org) as actual implementation for the energy calculations.
+
 # Build and Install
 
-The package requires the `vmd-python` package, which is only distributed in the `conda-forge` channel and unfortunately has the restriction of only working with `python<3.12.0a0`. For this reason, this package has to be installed in a conda environment as its dependencies cannot be installed from PyPI alone. 
-This package will be build locally and can then be imported.
+This package uses a custom C extension for SASA calculations and can be installed as a standard Python package using pip.
 
-## Environment
+## Requirements
 
-First, create a fresh conda-environment:
+- Python 3.9 or higher
+- A C compiler (gcc, clang)
+- Python development headers
 
+## Installation
+
+It is recommended to use a python environment.
 ```bash
-conda create --name sasa --strict-channel-priority -c conda-forge python"<3.12.0a0" conda-build
+# Create a python environment (optional) or use an existing one
+python -m venv ~/venv/sasa
+# Activate your Python environment
+source ~/venv/sasa/bin/activate
 ```
 
-and activate it
-
-```bash
-conda activate sasa
+From this projects root directory install the package with all dependencies
 ```
-## Install dependencies and build
-
-In the `SASA-analysis` directory (NOT in the `build_recipe`) execute 
-
-```bash
-./build.sh
+pip install .
 ```
 
-This will install the dependencies, build the package locally and then install the package itself. Executing the script, might take a few minutes. When it is finished, the package is ready to use.
+## Verification
+
+After installation, you can either verify that the SASA extension is loaded correctly (tp not confuse python with the local `sasa_ext` directory, execute this from any other than the source-file directory):
+```bash
+cd && python -c "import sasa_ext; print('✓ SASA extension loaded successfully')"
+```
+
+or/and execute the tests in the `tests` directory. This requires the installation of the test-requirements and the install in editable mode:
+```bash
+pip install -e ".[test]"
+pytest ./tests
+```
 
 # Usage
 
@@ -62,17 +76,18 @@ The package really only has one usable method `sasa_lammps.sasa()`:
     dump_str : str
         Dump command to provide to LAMMPS. See examples directory
         https://docs.lammps.org/dump.html
-    lammps_exe : str
-        Full path to the LAMMPS executable
-    n_procs : int
+    lammps_exe : str, optional
+        Full path to the LAMMPS executable. If not provided, will automatically
+        download and use pre-built LAMMPS binaries from https://download.lammps.org/static/
+    n_procs : int, optional
         Number of LAMMPS instances to run in parallel (Default: 1)
-    srad : float
+    srad : float, optional
         Probe radius: Effectively a scaling factor for the vdW radii
         (Default: 1.4, which is the most commonly used because its approx. the
         radius of water)
-    samples : int
+    samples : int, optional
         Maximum points on the atomic vdW sphere to generate per atom (Default: 100)
-    path : str
+    path : str, optional
         Execution path (Default: .)
 
     Returns
@@ -103,8 +118,8 @@ gro_file = "lysozyme_part.gro"
 data_file = "data.lysozyme_part"
 # Import the molecule file (example also contains h2o2.mol)
 mol_file = "h.mol"
-# Path to you lammps executable
-lammps_exe =  "/opt/lammps-23Jun2022/src/lmp_mpi"
+# Path to your lammps executable (optional - will auto-download if not provided)
+# lammps_exe =  "/opt/lammps-23Jun2022/src/lmp_mpi"
 # Specify the force filed parameters, in this case reaxFF parameters*
 ff_str = """
 pair_style      reaxff NULL safezone 1.6 mincap 100 minhbonds 150
@@ -117,6 +132,8 @@ dump_str = """ """
 dump            traj all custom 1 traj.lmp id mol type element x y z vx vy vz q 
 dump_modify     traj append yes element H C N O S 
 """
-# Run sasa
-sasa(gro_file, data_file, mol_file, ff_str, dump_str, lammps_exe)
+# Run sasa (lammps_exe is now optional)
+sasa(gro_file, data_file, mol_file, ff_str, dump_str)
+# Or with custom LAMMPS executable:
+# sasa(gro_file, data_file, mol_file, ff_str, dump_str, lammps_exe)
 ```
