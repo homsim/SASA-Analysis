@@ -3,6 +3,7 @@ import sasa_lammps
 import shutil
 
 from sasa_lammps.constants import *
+from sasa_lammps.resource_loader import resources
 
 
 def _check_files(path: str) -> None:
@@ -20,10 +21,8 @@ def _check_files(path: str) -> None:
 
     # copy the LAMMPS input template to the working dir
     module_dir = os.path.dirname(sasa_lammps.__file__)
-    shutil.copy(os.path.join(module_dir, IN_PRE), os.path.join(path, IN_PRE))
-    shutil.copy(
-        os.path.join(module_dir, IN_TEMPLATE), os.path.join(path, IN_TEMPLATE)
-    )
+    shutil.copy(resources.joinpath(IN_PRE), os.path.join(path, IN_PRE))
+    shutil.copy(resources.joinpath(IN_TEMPLATE), os.path.join(path, IN_TEMPLATE))
 
     return 0
 

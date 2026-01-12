@@ -255,7 +255,7 @@ def sasa(
     path=".",
 ):
     """
-    Run the SASA (solvet accasible surface analysis) on a given macromolecule 
+    Run the SASA (solvet accessible surface analysis) on a given macromolecule 
     using a given probe molecule.
     The package was designed to start from a gromacs file of the macromolecule.
     For good simulation practices the macromolecule should be pre-equilibrated in water.
