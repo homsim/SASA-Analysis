@@ -3,8 +3,6 @@ import numpy as np
 from ovito.io import import_file, export_file
 from ovito.data import NearestNeighborFinder
 
-from sasa_lammps.sasa_core import _create_sasa_xyz as _create_sasa_xyz_impl
-
 
 def _convert_data_file(path, data_file):
     """Use the Ovito API to convert LAMMPS data file to xyz"""
@@ -26,34 +24,6 @@ def _convert_data_file(path, data_file):
     )
 
     return xyz_file
-
-
-def _create_sasa_xyz(path, xyz_file, srad, samples):
-    """
-    Create van der Waals surface points using efficient C extension.
-
-    Parameters
-    ----------
-    path : str
-        Path to xyz_file and where to export files to
-    xyz_file : str
-        Name of the xyz-file to use
-    srad : float
-        Probe radius: Effectively a scaling factor for the vdW radii
-    samples : int
-        Maximum points on the atomic vdW sphere to generate per atom
-
-    Returns
-    -------
-    sasa_points : numpy.ndarray
-        (N, 3) Array of coordinates on the SAS.
-        N is loosely determined by 'samples' argument.
-
-    """
-
-
-    ## is this wrapper really needed????
-    return _create_sasa_xyz_impl(path, xyz_file, srad, samples)
 
 
 def _neighbor_finder(path, data_file, sasa_positions):

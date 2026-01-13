@@ -7,7 +7,6 @@ with the main sasa_lammps package.
 
 import pytest
 import numpy as np
-import tempfile
 from pathlib import Path
 
 
@@ -161,7 +160,7 @@ class TestConversionModuleIntegration:
     def test_conversion_module_imports(self):
         """Test that conversion module imports correctly."""
         try:
-            from sasa_lammps.conversion import _create_sasa_xyz
+            from sasa_lammps.sasa_core import _create_sasa_xyz
             # Should import without error
             assert callable(_create_sasa_xyz), "Should import SASA function"
         except ImportError as e:
@@ -171,7 +170,7 @@ class TestConversionModuleIntegration:
 
     def test_create_sasa_xyz_integration(self, xyz_files, tmp_path):
         """Test the integrated _create_sasa_xyz function."""
-        from sasa_lammps.conversion import _create_sasa_xyz
+        from sasa_lammps.sasa_core import _create_sasa_xyz
 
         # Copy test file to temporary directory
         test_file = xyz_files['single_atom']
