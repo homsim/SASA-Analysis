@@ -87,7 +87,7 @@ class TestSASACoreModule:
 
     def test_create_sasa_xyz_function(self, xyz_files, tmp_path):
         """Test the SASA XYZ creation function."""
-        from sasa_lammps.sasa_core import _create_sasa_xyz
+        from sasa_lammps.sasa_core import create_sasa_xyz
         from sasa_lammps.constants import SASAXYZ
 
         # Copy test file to temporary directory
@@ -96,7 +96,7 @@ class TestSASACoreModule:
         temp_xyz.write_text(test_file.read_text())
 
         # Call SASA function
-        sasa_points = _create_sasa_xyz(
+        sasa_points = create_sasa_xyz(
             str(tmp_path), "test.xyz", srad=1.4, samples=500
         )
 
@@ -160,9 +160,9 @@ class TestConversionModuleIntegration:
     def test_conversion_module_imports(self):
         """Test that conversion module imports correctly."""
         try:
-            from sasa_lammps.sasa_core import _create_sasa_xyz
+            from sasa_lammps.sasa_core import create_sasa_xyz
             # Should import without error
-            assert callable(_create_sasa_xyz), "Should import SASA function"
+            assert callable(create_sasa_xyz), "Should import SASA function"
         except ImportError as e:
             # May fail if dependencies like ovito or sasa_ext are missing - that's expected
             assert any(dep in str(e).lower() for dep in ["ovito", "sasa_ext", "sasa_core"]), \
@@ -170,7 +170,7 @@ class TestConversionModuleIntegration:
 
     def test_create_sasa_xyz_integration(self, xyz_files, tmp_path):
         """Test the integrated _create_sasa_xyz function."""
-        from sasa_lammps.sasa_core import _create_sasa_xyz
+        from sasa_lammps.sasa_core import create_sasa_xyz
 
         # Copy test file to temporary directory
         test_file = xyz_files['single_atom']
@@ -178,7 +178,7 @@ class TestConversionModuleIntegration:
         temp_xyz.write_text(test_file.read_text())
 
         # Call integrated function
-        sasa_points = _create_sasa_xyz(str(tmp_path), "test.xyz", srad=1.4, samples=500)
+        sasa_points = create_sasa_xyz(str(tmp_path), "test.xyz", srad=1.4, samples=500)
 
         # Should return valid results
         assert isinstance(sasa_points, np.ndarray)
@@ -232,7 +232,7 @@ class TestPackageStructure:
             'parse_xyz_file',
             'get_vdw_radius',
             'compute_sasa_from_xyz',
-            '_create_sasa_xyz'
+            'create_sasa_xyz'
         ]
 
         for func_name in expected_functions:

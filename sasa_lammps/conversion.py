@@ -4,7 +4,7 @@ from ovito.io import import_file, export_file
 from ovito.data import NearestNeighborFinder
 
 
-def _convert_data_file(path, data_file):
+def convert_data_file(path, data_file):
     """Use the Ovito API to convert LAMMPS data file to xyz"""
     pipeline = import_file(Path(path) / data_file)
 
@@ -26,7 +26,7 @@ def _convert_data_file(path, data_file):
     return xyz_file
 
 
-def _neighbor_finder(path, data_file, sasa_positions):
+def neighbor_finder(path, data_file, sasa_positions):
     """
     Compute informations on the nearest neighbors of every SAS point, i.e. which
     atom of the macromolecule is closest to the SAS point.
@@ -66,7 +66,7 @@ def _neighbor_finder(path, data_file, sasa_positions):
     return neighbors
 
 
-def _rotate_probe(path, data_file, sasa_positions, neighbors):
+def rotate_probe(path, data_file, sasa_positions, neighbors):
     """
     Rotate the probe molecule on the SAS. Finds the nearest SAS point for each atom
     of the macromolecule. The rotation is then done with respect to the center-of-mass

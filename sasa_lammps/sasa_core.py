@@ -136,7 +136,7 @@ def compute_sasa_from_xyz(xyz_file_path, srad=1.4, samples=500, points=True):
     else:
         return total_sasa, None
 
-def _create_sasa_xyz(path, xyz_file, srad, samples):
+def create_sasa_xyz(path, xyz_file, srad, samples):
     """
     Create van der Waals surface points for molecular analysis.
 

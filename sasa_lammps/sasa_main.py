@@ -17,19 +17,19 @@ import signal
 from multiprocessing import Pool
 
 from sasa_lammps.gro2lammps import gro2lammps
-from sasa_lammps.sasa_core import _create_sasa_xyz
+from sasa_lammps.sasa_core import create_sasa_xyz
 from sasa_lammps.lammps_manager import get_lammps_executable
 from sasa_lammps.helper import (
-    _check_files,
-    _count_atoms_in_mol,
-    _count_atoms_in_macromol,
-    _write_params_file,
-    _read_last_two,
+    check_files,
+    count_atoms_in_mol,
+    count_atoms_in_macromol,
+    write_params_file,
+    read_last_two,
 )
 from sasa_lammps.conversion import (
-    _rotate_probe,
-    _convert_data_file,
-    _neighbor_finder,
+    rotate_probe,
+    convert_data_file,
+    neighbor_finder,
 )
 from sasa_lammps.postprocessing import (
     residue_analysis,
@@ -81,26 +81,26 @@ class Sasa:
         gro2lammps(self.path, ELEM_LIBRARY).convert(self.gro_file, self.data_file)
 
         # remove existing files and copy input templates...
-        _check_files(self.path)
+        check_files(self.path)
 
         # write ff_str and dump_str to files for LAMMPS to read in
-        _write_params_file(self.ff_str, FF_PARAMS)
-        _write_params_file(self.dump_str, DUMP_COM)
+        write_params_file(self.ff_str, FF_PARAMS)
+        write_params_file(self.dump_str, DUMP_COM)
 
         # get the energies for the isolated macro- and probe molecule, respectively
         e_mol, e_prob = self._pre_calc()
 
         # convert data file
-        self.xyz_file = _convert_data_file(self.path, self.data_file)
+        self.xyz_file = convert_data_file(self.path, self.data_file)
 
         # create sasa position file
-        self.sasa_positions = _create_sasa_xyz(
+        self.sasa_positions = create_sasa_xyz(
             self.path, self.xyz_file, self.srad, self.samples
         )
         n_probes = len(self.sasa_positions)  # need this only to get the total num of iterations
 
         # build neigbor list
-        self.neighbors = _neighbor_finder(
+        self.neighbors = neighbor_finder(
             self.path, self.data_file, self.sasa_positions
         )
 
@@ -139,7 +139,7 @@ class Sasa:
             [0.0, 1.0, 0.0, 0.0]
         )
 
-        e_mol, e_prob = _read_last_two(self.path, "etot")
+        e_mol, e_prob = read_last_two(self.path, "etot")
 
         return e_mol, e_prob
 
@@ -147,7 +147,7 @@ class Sasa:
         """Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe"""
 
         # Count atoms in macro molecule
-        atom_number = _count_atoms_in_macromol(Path(self.path) / self.data_file)
+        atom_number = count_atoms_in_macromol(Path(self.path) / self.data_file)
 
         # create final output file header and write to spec.xyz
         header = f"{n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
@@ -155,8 +155,8 @@ class Sasa:
             f.write(header)
 
         # rotate the probe molecule for n-atomic probes (n > 1)
-        if _count_atoms_in_mol(Path(self.path) / self.mol_file) > 1:
-            self.rotations = _rotate_probe(
+        if count_atoms_in_mol(Path(self.path) / self.mol_file) > 1:
+            self.rotations = rotate_probe(
                 self.path, self.data_file, self.sasa_positions, self.neighbors
             )
         else:
@@ -312,8 +312,6 @@ def sasa(
     Returns
     -------
     None
-
-
     """
 
     S = Sasa(

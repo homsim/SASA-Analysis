@@ -13,7 +13,7 @@ from sasa_lammps.constants import (
 from sasa_lammps.resource_loader import resources
 
 
-def _check_files(path: str) -> None:
+def check_files(path: str) -> None:
     """
     Check if all the relevant files are present to exec LAMMPS
     and copy LAMMPS input file templates.
@@ -33,7 +33,7 @@ def _check_files(path: str) -> None:
     return 0
 
 
-def _count_atoms_in_macromol(data_file: str) -> int:
+def count_atoms_in_macromol(data_file: str) -> int:
     """Count number of atoms in macro molecule file"""
     with open(data_file, "r") as f:
         for line in f:
@@ -43,7 +43,7 @@ def _count_atoms_in_macromol(data_file: str) -> int:
 
     return atom_number
 
-def _count_atoms_in_mol(mol_file: str) -> int:
+def count_atoms_in_mol(mol_file: str) -> int:
     """Count number of atoms in molecule file"""
     with open(mol_file, "r") as f:
         for line in f:
@@ -54,7 +54,7 @@ def _count_atoms_in_mol(mol_file: str) -> int:
     return N
 
 
-def _write_params_file(string: str, file_name: str) -> None:
+def write_params_file(string: str, file_name: str) -> None:
     """Write string to a file. Needed to create the include files for LAMMPS to read"""
     with open(file_name, "w") as f:
         f.write(f"{string}\n")
@@ -62,7 +62,7 @@ def _write_params_file(string: str, file_name: str) -> None:
     return 0
 
 
-def _read_last_two(path: str, file_name: str) -> list[float, float]:
+def read_last_two(path: str, file_name: str) -> list[float, float]:
     """Read last to lines of file, convert to float and return the read values"""
     with open(Path(path) / file_name, "r") as f:
         lines = f.readlines()[-2:]
