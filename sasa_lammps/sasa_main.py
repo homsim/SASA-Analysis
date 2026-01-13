@@ -9,6 +9,7 @@ initialization, which probably takes the most amount of computational time right
 
 import os
 import subprocess
+from pathlib import Path
 import numpy as np
 import tqdm
 import signal
@@ -133,15 +134,15 @@ class Sasa:
         """Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe"""
 
         # Count atoms in macro molecule
-        atom_number = _count_atoms_in_macromol(os.path.join(self.path, self.data_file))
+        atom_number = _count_atoms_in_macromol(Path(self.path) / self.data_file)
 
         # create final output file header and write to spec.xyz
         header = f"{n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
-        with open(os.path.join(self.path, SPEC), "w") as f:
+        with open(Path(self.path) / SPEC, "w") as f:
             f.write(header)
 
         # rotate the probe molecule for n-atomic probes (n > 1)
-        if _count_atoms_in_mol(os.path.join(self.path, self.mol_file)) > 1:
+        if _count_atoms_in_mol(Path(self.path) / self.mol_file) > 1:
             self.rotations = _rotate_probe(
                 self.path, self.data_file, self.sasa_positions, self.neighbors
             )

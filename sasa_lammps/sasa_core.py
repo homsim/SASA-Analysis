@@ -5,8 +5,8 @@ This module provides solvent accessible surface area calculations
 using Monte Carlo sampling on atomic surfaces.
 """
 
-import os
 import numpy as np
+from pathlib import Path
 import sasa_ext
 
 def parse_xyz_file(xyz_file_path):
@@ -294,7 +294,7 @@ def _create_sasa_xyz(path, xyz_file, srad, samples):
     """
     from sasa_lammps.constants import SASAXYZ
 
-    xyz_file_path = os.path.join(path, xyz_file)
+    xyz_file_path = Path(path) / xyz_file
 
     # Compute SASA surface points
     _, sasa_points = compute_sasa_from_xyz(xyz_file_path, srad=srad, samples=samples, points=True)
@@ -308,7 +308,7 @@ def _create_sasa_xyz(path, xyz_file, srad, samples):
 
     header = f"{len(export_points)}\n "
     np.savetxt(
-        os.path.join(path, SASAXYZ),
+        Path(path) / SASAXYZ,
         export_points,
         header=header,
         comments="",

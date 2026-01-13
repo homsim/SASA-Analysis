@@ -1,9 +1,10 @@
+import pandas as pd
+from pathlib import Path
 from ovito.io import *
 from ovito.modifiers import *
 from ovito.data import *
 from ovito.pipeline import *
-import os
-import pandas as pd
+
 
 '''
 To succesfully run gro2lammps you need a library file of all elements included in you system.
@@ -23,7 +24,7 @@ class gro2lammps:
     def __init__(self, path, element_library):
         #_init: load data from libary file and write it to dictionary
         self.path = path
-        self.di = pd.read_csv(os.path.join(path, element_library), sep='\s+')
+        self.di = pd.read_csv(Path(path) / element_library, sep='\s+')
     
     def _delete_solvent(self, infile, pipeline):
         # Find the place to cut
@@ -54,7 +55,7 @@ class gro2lammps:
     
     def convert(self,infile, outfile):
         # Data import:
-        pipeline = import_file(os.path.join(self.path,infile))
+        pipeline = import_file(Path(self.path) / infile)
 
         # Delete solvent and ions
         self._delete_solvent(infile, pipeline)
@@ -74,4 +75,4 @@ class gro2lammps:
             output_property = 'Molecule Identifier'))
         data = pipeline.compute()
 
-        export_file(pipeline, os.path.join(self.path, outfile), "lammps/data",  atom_style="full")
+        export_file(pipeline, Path(self.path) / outfile, "lammps/data",  atom_style="full")

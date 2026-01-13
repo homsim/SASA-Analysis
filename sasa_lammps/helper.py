@@ -1,7 +1,8 @@
 import os
-import sasa_lammps
 import shutil
+from pathlib import Path
 
+import sasa_lammps
 from sasa_lammps.constants import *
 from sasa_lammps.resource_loader import resources
 
@@ -17,12 +18,11 @@ def _check_files(path: str) -> None:
     for f in to_rm:
         if f in fs:
             print(f"{f} file already exists. Will be overwritten...")
-            os.remove(os.path.join(path, f))
+            os.remove(Path(path) / f)
 
     # copy the LAMMPS input template to the working dir
-    module_dir = os.path.dirname(sasa_lammps.__file__)
-    shutil.copy(resources.joinpath(IN_PRE), os.path.join(path, IN_PRE))
-    shutil.copy(resources.joinpath(IN_TEMPLATE), os.path.join(path, IN_TEMPLATE))
+    shutil.copy(resources / IN_PRE, Path(path) / IN_PRE)
+    shutil.copy(resources / IN_TEMPLATE, Path(path) / IN_TEMPLATE)
 
     return 0
 
@@ -58,7 +58,7 @@ def _write_params_file(string: str, file_name: str) -> None:
 
 def _read_last_two(path: str, file_name: str) -> list[float, float]:
     """Read last to lines of file, convert to float and return the read values"""
-    with open(os.path.join(path, file_name), "r") as f:
+    with open(Path(path) / file_name, "r") as f:
         lines = f.readlines()[-2:]
     l1 = float(lines[0])
     l2 = float(lines[1])

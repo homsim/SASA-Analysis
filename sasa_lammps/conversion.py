@@ -1,22 +1,21 @@
-import os
+from pathlib import Path
 import numpy as np
 from ovito.io import import_file, export_file
 from ovito.data import NearestNeighborFinder
 
-from sasa_lammps.constants import SASAXYZ
 from sasa_lammps.sasa_core import _create_sasa_xyz as _create_sasa_xyz_impl
 
 
 def _convert_data_file(path, data_file):
     """Use the Ovito API to convert LAMMPS data file to xyz"""
-    pipeline = import_file(os.path.join(path, data_file))
+    pipeline = import_file(Path(path) / data_file)
 
     ### temporary solution
     xyz_file = f"{data_file.split('.')[-1]}.xyz"
 
     export_file(
         pipeline,
-        os.path.join(path, xyz_file),
+        Path(path) / xyz_file,
         "xyz",
         columns=[
             "Particle Type",
@@ -82,7 +81,7 @@ def _neighbor_finder(path, data_file, sasa_positions):
 
     """
 
-    pipeline = import_file(os.path.join(path, data_file))
+    pipeline = import_file(Path(path) / data_file)
     data = pipeline.compute()
 
     finder = NearestNeighborFinder(1, data)  # 1st nearest neighbor
@@ -124,7 +123,7 @@ def _rotate_probe(path, data_file, sasa_positions, neighbors):
 
     """
 
-    pipeline = import_file(os.path.join(path, data_file))
+    pipeline = import_file(Path(path) / data_file)
 
     # calculate the center-of-mass of the macromolecule
     data = pipeline.compute()
@@ -161,7 +160,7 @@ def _rotate_probe(path, data_file, sasa_positions, neighbors):
     """
     header = f"{np.shape(rot_export)[0]}\n "
     np.savetxt(
-        os.path.join(path, "rotations.dat"),
+        Path(path) /  "rotations.dat",
         rot_export,
         header=header,
         comments="",

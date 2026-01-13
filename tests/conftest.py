@@ -6,7 +6,6 @@ import pytest
 import numpy as np
 import json
 import tempfile
-import os
 from pathlib import Path
 
 import sasa_ext
