@@ -2,8 +2,14 @@ import os
 import shutil
 from pathlib import Path
 
-import sasa_lammps
-from sasa_lammps.constants import *
+from sasa_lammps.constants import (
+    ETOT,
+    TRAJ,
+    THERMOLOG,
+    SPEC,
+    IN_PRE,
+    IN_TEMPLATE
+)
 from sasa_lammps.resource_loader import resources
 
 

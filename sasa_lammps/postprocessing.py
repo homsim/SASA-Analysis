@@ -1,22 +1,19 @@
-# General
 import re
 from pathlib import Path
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
-# Ovito specifics
-from ovito.io import *
-from ovito.modifiers import *
-from ovito.data import *
-from ovito.pipeline import *
 
-'''
-class SASA_postprossing:
-    def __init__(self, path):
-        self.path = path
-'''
+from ovito.io import import_file
+from ovito.modifiers import (
+    ExpressionSelectionModifier,
+    DeleteSelectedModifier
+)
+from ovito.data import NearestNeighborFinder
+
         
 ### Single Atom analysis ###
 def neighbor_analysis(path, SASA_outfile, gro_file):
@@ -68,7 +65,7 @@ def atom_analysis(path, SASA_outfile, neighbor):
     strongest_interaction.to_csv('./atom_analysis_total.txt', sep='\t', index=False)
     # count the amount of most attacked particle types and devide by their total number of all attacked (not in general in the protein!)
     total_count = spec['ParticleType'].value_counts()
-    s_count =strongest_interaction['ParticleType'].value_counts()
+    s_count = strongest_interaction['ParticleType'].value_counts()
     result = {'labels': [],'total':[], 'percent': [],}
     for item in s_count.index:
         result['labels'].append(str(item))
@@ -149,7 +146,7 @@ def residue_analysis(path, SASA_outfile, residuelist):
             index=False)
     return result
 
-def residue_analysis_all_res(path, result):
+def residue_analysis_plot(path, result):
     # LOAD AND PREPARE
     result = pd.DataFrame(result).sort_values('labels', ascending=True)
     ## Create color list with fixed color for each residue

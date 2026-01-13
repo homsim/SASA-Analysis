@@ -16,7 +16,7 @@ import signal
 
 from multiprocessing import Pool
 
-from sasa_lammps.gro2lammps import * 
+from sasa_lammps.gro2lammps import gro2lammps
 
 from sasa_lammps.helper import (
     _check_files,
@@ -32,9 +32,25 @@ from sasa_lammps.conversion import (
     _neighbor_finder,
 )
 
-from sasa_lammps.postprocessing import *
+from sasa_lammps.postprocessing import (
+    residue_analysis,
+    neighbor_analysis,
+    residue_analysis_plot,
+    residuelist,
+    atom_analysis,
+    atom_analysis_plot
+)
 
-from sasa_lammps.constants import *
+from sasa_lammps.constants import (
+    ELEM_LIBRARY,
+    FF_PARAMS,
+    DUMP_COM,
+    SPEC,
+    RESIDUELIST,
+    IN_PRE,
+    IN_TEMPLATE,
+    KCAL_TO_EV
+)
 from sasa_lammps.lammps_manager import get_lammps_executable
 
 class Sasa:

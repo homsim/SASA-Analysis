@@ -3,7 +3,6 @@ LAMMPS binary manager for automatic download and setup of pre-built LAMMPS binar
 """
 
 import os
-import tempfile
 import urllib.request
 import tarfile
 import shutil

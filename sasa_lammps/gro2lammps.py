@@ -1,9 +1,12 @@
 import pandas as pd
 from pathlib import Path
-from ovito.io import *
-from ovito.modifiers import *
-from ovito.data import *
-from ovito.pipeline import *
+
+from ovito.io import import_file, export_file
+from ovito.modifiers import (
+    ExpressionSelectionModifier,
+    DeleteSelectedModifier,
+    ComputePropertyModifier
+)
 
 
 '''
@@ -29,13 +32,12 @@ class gro2lammps:
     def _delete_solvent(self, infile, pipeline):
         # Find the place to cut
         with open(infile, "r") as rf:
-            for i,line in enumerate(rf):
+            for i, line in enumerate(rf):
                 if 'SOL' in line or 'SOD' in line:
                     atmnr = i - 2
                     break
         # UPO_del_Solv - Expression selection:
-        pipeline.modifiers.append(ExpressionSelectionModifier(
-            expression = 'ParticleIdentifier>%s'%str(atmnr)))
+        pipeline.modifiers.append(ExpressionSelectionModifier(expression = 'ParticleIdentifier>%s'%str(atmnr)))
         #  UPO_del_Solv - Delete selected
         pipeline.modifiers.append(DeleteSelectedModifier())
 
@@ -73,6 +75,6 @@ class gro2lammps:
         pipeline.modifiers.append(ComputePropertyModifier(
             expressions = ('ResidueIdentifier',), 
             output_property = 'Molecule Identifier'))
-        data = pipeline.compute()
+        pipeline.compute()
 
         export_file(pipeline, Path(self.path) / outfile, "lammps/data",  atom_style="full")
