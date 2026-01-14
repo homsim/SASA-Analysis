@@ -8,11 +8,12 @@ ELEM_LIBRARY = "element_library.txt"
 FF_PARAMS = "ff_params.dat"
 DUMP_COM = "dump_com.dat"
 SPEC = "spec.xyz"
-SASAXYZ = "sasa.xyz"
-RESIDUELIST = "residuelist.txt"
+SASA_XYZ = "sasa.xyz"
+RESIDUE_LIST = "residuelist.txt"
 ETOT = "etot"
 TRAJ = "traj.lmp"
 THERMOLOG = "thermolog1"
+DATA_FILE = "data.macromol"
 
 # Fixed seed for reproducibility in the C extension
 SAS_SEED = 38572111

@@ -1,5 +1,5 @@
 """
-SASA computation module using efficient C extension.
+SASA computation module using C extension.
 
 This module provides solvent accessible surface area calculations
 using Monte Carlo sampling on atomic surfaces.
@@ -9,92 +9,113 @@ import numpy as np
 from pathlib import Path
 import sasa_ext
 
-from sasa_lammps.constants import RADII_MAP, SAS_SEED
+from ovito.io import import_file
+from ovito.data import NearestNeighborFinder
 
-def parse_xyz_file(xyz_file_path):
+from sasa_lammps.constants import SAS_SEED, SASA_XYZ
+from sasa_lammps.utils import parse_xyz_file
+
+
+def neighbor_finder(path, data_file, sasa_positions):
     """
-    Parse XYZ file to extract coordinates and atom types.
+    Compute informations on the nearest neighbors of every SAS point, i.e. which
+    atom of the macromolecule is closest to the SAS point.
 
     Parameters
     ----------
-    xyz_file_path : str
-        Path to the XYZ file
+    path : str
+        Path to xyz_file and where to export files to
+    data_file: str
+        Name of the LAMMPS data file of the macromolecule
+    sasa_positions : numpy.array
+        Coordinates of the points on the SAS
 
     Returns
     -------
-    coords : numpy.ndarray
-        (N, 3) array of atomic coordinates in Angstroms
-    radii : numpy.ndarray
-        (N,) array of VdW radii for each atom
+    neighbors: dict{"id", "pos", "res", "dist"}
+        Dictionary of informations on nearest neighbors:
+        neighbors["id"]: Particle ID of the nearest neighbor
+        neighbors["pos"]: Position of the nearest neighbor
+        neighbors["res"]: Molecule ID of the nearest neighbor, which can be used for residue identification
+        neighbors["dist"]: Distance of the nearest neighbor
+
     """
-    with open(xyz_file_path, 'r') as f:
-        lines = f.readlines()
 
-    if not lines:
-        raise ValueError("Empty XYZ file")
+    pipeline = import_file(Path(path) / data_file)
+    data = pipeline.compute()
 
-    try:
-        n_atoms = int(lines[0].strip())
-    except (ValueError, IndexError) as e:
-        raise ValueError(f"Could not read atom count from first line: {e}")
+    finder = NearestNeighborFinder(1, data)  # 1st nearest neighbor
+    neighbors = {"id": [], "pos": [], "res": [], "dist": []}
+    for pos in sasa_positions:
+        for neigh in finder.find_at(pos):
+            neighbors["id"].append(data.particles["Particle Identifier"][neigh.index])
+            neighbors["pos"].append(data.particles["Position"][neigh.index])
+            neighbors["res"].append(data.particles["Molecule Identifier"][neigh.index])
+            neighbors["dist"].append(neigh.distance)
 
-    if len(lines) < 2:
-        raise ValueError("XYZ file must have at least 2 lines (atom count + comment)")
+    return neighbors
 
-    coords = []
-    elements = []
-
-    for i in range(2, 2 + n_atoms):  # Skip header lines
-        if i >= len(lines):
-            raise ValueError(f"XYZ file claims {n_atoms} atoms but only has {i-2} atom lines")
-
-        parts = lines[i].strip().split()
-        if len(parts) < 4:
-            raise ValueError(f"Line {i+1}: Expected at least 4 fields (element x y z), got {len(parts)}")
-
-        element = parts[0]
-        try:
-            x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
-        except ValueError as e:
-            raise ValueError(f"Line {i+1}: Could not parse coordinates: {e}")
-
-        elements.append(element)
-        coords.append([x, y, z])
-
-    coords = np.array(coords, dtype=np.float32)
-    radii = np.array([get_vdw_radius(elem) for elem in elements], dtype=np.float32)
-
-    return coords, radii
-
-def get_vdw_radius(element):
+def rotate_probe(path, data_file, sasa_positions, neighbors):
     """
-    Get VdW radius for element (in Angstroms).
-
-    Uses standard VdW radii from authoritative literature sources.
-    Values are hierarchically selected from:
-    1. Bondi, A. (1964). "van der Waals Volumes and Radii".
-       J. Phys. Chem. 68(3), 441-451. DOI: 10.1021/j100785a001
-    2. Batsanov, S.S. (2001). "Van der Waals radii of elements".
-       Inorg. Mater. 37(9), 871-885.
-    3. Alvarez, S. (2013). "A cartography of the van der Waals territories".
-       Dalton Trans. 42(24), 8617-8636. DOI: 10.1039/C3DT50599E
-
-    Priority: Bondi > Batsanov > Alvarez for maximum compatibility.
+    Rotate the probe molecule on the SAS. Finds the nearest SAS point for each atom
+    of the macromolecule. The rotation is then done with respect to the center-of-mass
+    of the macromolecule.
 
     Parameters
     ----------
-    element : str
-        Element symbol (case-insensitive, digits removed)
+    path : str
+        Path to xyz_file and where to export files to
+    data_file: str
+        Name of the LAMMPS data file of the macromolecule
+    sasa_positions : numpy.array
+        Coordinates of the points on the SAS
+    neighbors : dict
+        Dictionary of neighbor list informations.
+        Output of the neighbor_finder() method
 
     Returns
     -------
-    float
-        Van der Waals radius in Angstroms
-    """
-    # Clean element symbol (remove digits, make uppercase)
-    clean_element = ''.join(c for c in element if c.isalpha()).capitalize()
+    rot_export: numpy.ndarray
+        Array of shape (N, 4) where N is the number of points on the SAS.
+        rot_export[N, 0]: rotation angle
+        rot_export[N, 1:]: x, y, z coordinates of the respective rotation vector
 
-    return RADII_MAP.get(clean_element, 1.70)  # Default to carbon radius
+    """
+
+    pipeline = import_file(Path(path) / data_file)
+
+    # calculate the center-of-mass of the macromolecule
+    data = pipeline.compute()
+    data_positions = data.particles.positions
+    data_masses = data.particles.masses
+    com = np.sum([m * p for m, p in zip(data_masses, data_positions)], axis=0) / np.sum(
+        data_masses
+    )
+
+    # get the indices of the particle container according to the IDs
+    ordering = np.argsort(data.particles.identifiers)
+    indices = ordering[
+        np.searchsorted(data.particles.identifiers, neighbors["id"], sorter=ordering)
+    ]
+
+    # calculate rotation angles and vectors to parse them to LAMMPS
+    rot_export = []
+    for index, sasa_pos in zip(indices, sasa_positions):
+        curr_id = neighbors["id"][index]
+        com_vec = data_positions[curr_id] - com
+        sas_vec = sasa_pos - data_positions[curr_id]
+
+        angle = np.rad2deg(
+            np.arccos(
+                np.dot(com_vec, sas_vec)
+                / (np.linalg.norm(com_vec) * np.linalg.norm(sas_vec))
+            )
+        )
+
+        vector = np.cross(com_vec, sas_vec)
+        rot_export.append(np.insert(vector, 0, angle))
+
+    return rot_export
 
 def compute_sasa_from_xyz(xyz_file_path, srad=1.4, samples=500, points=True):
     """
@@ -157,8 +178,6 @@ def create_sasa_xyz(path, xyz_file, srad, samples):
         (N, 3) Array of coordinates on the SAS.
         N is loosely determined by 'samples' argument.
     """
-    from sasa_lammps.constants import SASAXYZ
-
     xyz_file_path = Path(path) / xyz_file
 
     # Compute SASA surface points
@@ -173,7 +192,7 @@ def create_sasa_xyz(path, xyz_file, srad, samples):
 
     header = f"{len(export_points)}\n "
     np.savetxt(
-        Path(path) / SASAXYZ,
+        Path(path) / SASA_XYZ,
         export_points,
         header=header,
         comments="",

@@ -11,7 +11,6 @@ cd test && conda activate sasa_vmd_ref && python generate_vmd_reference.py
 """
 
 import sys
-import numpy as np
 import json
 from pathlib import Path
 

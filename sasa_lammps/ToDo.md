@@ -10,8 +10,7 @@
   - Pre-allocate memory in collection-object, like so `l = [0] * 1000000`
   - Think about where methods and functions lie within objects: local vs. global
   - If I want to profile the whole thing, I should proably mock the lmp-executable to make the profiling more efficient
-- Add type-hints an docstrings everywhere they are still missing
+- Add type-hints and docstrings everywhere they are still missing
 - Re-distribute the methods in `conversion.py`, `gro2lammps.py` and `helper.py` and maybe change the naming
 - Create a submodule `helper` (or `misc` or similar) and move several files here
 - IMO the `sasa_lammps/` should only contain `sasa_core.py` and `sasa_main.py` 
-- Make the postprocessing optional. To do so construct a proper result object that, at least holds information about the result files, but at best has the results as objects. Then the postprocessing can be called on that object directly. This allows 1.) the postprocessing to be optional 2.) the later addition of user-configuration for the postprocessing

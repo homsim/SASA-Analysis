@@ -5,7 +5,6 @@ Pytest configuration and shared fixtures for SASA tests.
 import pytest
 import numpy as np
 import json
-import tempfile
 from pathlib import Path
 
 import sasa_ext
