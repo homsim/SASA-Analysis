@@ -21,5 +21,5 @@ dump_modify     traj append yes element H C N O S
 # Run sasa
 sasa = Sasa(gro_file, mol_file, ff_str, dump_str)#, lammps_exe)
 sasa.compute()
-sasa.postprocess()
+# sasa.postprocess() # currently broken. WIP
 
