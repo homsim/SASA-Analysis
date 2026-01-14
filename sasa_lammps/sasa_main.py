@@ -135,7 +135,7 @@ class Sasa:
         self._initialize()
 
         # here starts the computation
-        self._exec_lammps_iterations(self.n_probes, self.e_mol, self.e_prob)
+        self._exec_lammps_iterations(self.e_mol, self.e_prob)
 
         return 0
     
@@ -217,14 +217,12 @@ class Sasa:
 
         return e_mol, e_prob
 
-    def _exec_lammps_iterations(self, n_probes: int, e_mol: float, e_prob: float) -> None:
+    def _exec_lammps_iterations(self, e_mol: float, e_prob: float) -> None:
         """
         Execute LAMMPS singlepoints on SASA coordinates using a N-atomic probe
         
         Parameters
         ----------
-        n_probes : int
-            Nunmber of probe points on the SAS
         e_mol : float
             Energy of the macro molecule in kcal/mole
         e_prob : float
@@ -238,7 +236,7 @@ class Sasa:
         atom_number = count_atoms_in_macromol(Path(self.path) / DATA_FILE)
 
         # create final output file header and write to spec.xyz
-        header = f"{n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
+        header = f"{self.n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
         with open(Path(self.path) / SPEC, "w") as f:
             f.write(header)
 
@@ -248,7 +246,7 @@ class Sasa:
                 self.path, DATA_FILE, self.sasa_positions, self.neighbors
             )
         else:
-            self.rotations = np.zeros((n_probes, 4))
+            self.rotations = np.zeros((self.n_probes, 4))
             # add some direction otherwise LAMMPS raises an error because of the zero vector
             self.rotations[:, 1] += 1.000
 
@@ -266,7 +264,7 @@ class Sasa:
             signal.signal(signal.SIGINT, original_sigint_handler)
             try:
                 pool.starmap(
-                    self._run_lmp, tqdm.tqdm(run_iterable, total=n_probes), chunksize=1
+                    self._run_lmp, tqdm.tqdm(run_iterable, total=self.n_probes), chunksize=1
                 )
             except KeyboardInterrupt:
                 pool.terminate()
