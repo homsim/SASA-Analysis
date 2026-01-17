@@ -63,7 +63,7 @@ class TestSASACoreModule:
     def test_create_sasa_xyz_function(self, xyz_files, tmp_path):
         """Test the SASA XYZ creation function."""
         from sasa_lammps.sasa_core import create_sasa_xyz
-        from sasa_lammps.constants import SASA_XYZ
+        from sasa_lammps.constants import FN_SASA_XYZ
 
         # Copy test file to temporary directory
         test_file = xyz_files['two_atoms']
@@ -81,7 +81,7 @@ class TestSASACoreModule:
         assert len(sasa_points) > 0, "Should generate surface points"
 
         # Check that SASA file was created
-        sasa_file = tmp_path / SASA_XYZ
+        sasa_file = tmp_path / FN_SASA_XYZ
         assert sasa_file.exists(), "Should create SASA XYZ file"
 
         # Check file format
@@ -243,14 +243,14 @@ class TestPackageStructure:
     
     def test_constants_availability(self):
         """Test that some constants."""
-        from sasa_lammps.constants import SASA_XYZ, IN_PRE, IN_TEMPLATE, RADII_MAP
+        from sasa_lammps.constants import FN_SASA_XYZ, FN_IN_PRE, FN_IN_TEMPLATE, RADII_MAP
 
-        assert isinstance(SASA_XYZ, str)
-        assert isinstance(IN_PRE, str)
-        assert isinstance(IN_TEMPLATE, str)
+        assert isinstance(FN_SASA_XYZ, str)
+        assert isinstance(FN_IN_PRE, str)
+        assert isinstance(FN_IN_TEMPLATE, str)
         assert isinstance(RADII_MAP, dict)
 
-        assert SASA_XYZ.endswith('.xyz')
+        assert FN_SASA_XYZ.endswith('.xyz')
 
     def test_package_version_consistency(self):
         """Test that package version is consistently defined."""

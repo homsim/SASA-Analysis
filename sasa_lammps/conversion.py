@@ -10,7 +10,7 @@ from ovito.modifiers import (
     ComputePropertyModifier
 )
 
-from sasa_lammps.constants import DATA_FILE, ELEM_LIBRARY
+from sasa_lammps.constants import DATA_FILE, FN_ELEM_LIBRARY
 
 
 class ConverterStrategy(ABC):
@@ -35,9 +35,10 @@ class ConverterStrategy(ABC):
 class GromacsToLammpsStrategy(ConverterStrategy):
     """Strategy implementation to convert Gromacs to LAMMPS files."""
     def convert(self, path: str, in_file: str) -> str:
-        self.di = pd.read_csv(Path(path) / ELEM_LIBRARY, sep='\s+')
+        self.path = path
+        self.di = pd.read_csv(Path(self.path) / FN_ELEM_LIBRARY, sep='\s+')
 
-        pipeline = import_file(Path(path) / in_file)
+        pipeline = import_file(Path(self.path) / in_file)
         self._delete_solvent(in_file, pipeline)
 
         pipeline.modifiers.append(self._change_particleTypes)
@@ -54,7 +55,7 @@ class GromacsToLammpsStrategy(ConverterStrategy):
 
         export_file(
             pipeline, 
-            Path(path) / DATA_FILE, 
+            Path(self.path) / DATA_FILE, 
             "lammps/data",  
             atom_style="full")
 
@@ -72,7 +73,7 @@ class GromacsToLammpsStrategy(ConverterStrategy):
             Ovito pipeline object that acts on the dataset
         """
         # Find the place to cut
-        with open(in_file, "r") as rf:
+        with open(Path(self.path) /in_file, "r") as rf:
             for i, line in enumerate(rf):
                 if 'SOL' in line or 'SOD' in line:
                     atmnr = i - 2

@@ -7,7 +7,6 @@ to ensure accuracy and compatibility.
 
 import pytest
 import numpy as np
-import json
 from pathlib import Path
 import sasa_ext
 from sasa_lammps.utils import parse_xyz_file

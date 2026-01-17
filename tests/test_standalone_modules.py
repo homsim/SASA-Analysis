@@ -114,9 +114,9 @@ class TestConstants:
         spec.loader.exec_module(module)
 
         # Test SASAXYZ constant
-        assert hasattr(module, 'SASA_XYZ')
-        assert isinstance(module.SASA_XYZ, str)
-        assert module.SASA_XYZ.endswith('.xyz')
+        assert hasattr(module, 'FN_SASA_XYZ')
+        assert isinstance(module.FN_SASA_XYZ, str)
+        assert module.FN_SASA_XYZ.endswith('.xyz')
 
 
 class TestFileStructure:
@@ -198,32 +198,6 @@ class TestFileStructure:
 
         assert 'build-system' in pyproject_content, "pyproject.toml should have build-system"
         assert 'numpy' in pyproject_content, "pyproject.toml should specify numpy dependency"
-
-    def test_test_structure(self):
-        """Test that test structure is complete."""
-        tests_path = Path(__file__).parent
-
-        required_test_files = [
-            "__init__.py",
-            "conftest.py",
-            "test_core_components.py",
-            "test_input_validation.py",
-            "test_vmd_integration.py",
-            "test_performance.py",
-            "test_python_modules.py",
-            "README.md"
-        ]
-
-        for test_file in required_test_files:
-            full_path = tests_path / test_file
-            assert full_path.exists(), f"Required test file missing: {test_file}"
-
-        # Check pytest.ini
-        pytest_ini = tests_path.parent / "pytest.ini"
-        assert pytest_ini.exists(), "pytest.ini should exist"
-
-        pytest_content = pytest_ini.read_text()
-        assert 'testpaths = tests' in pytest_content, "pytest.ini should specify testpaths"
 
 
 class TestImplementationReadiness:

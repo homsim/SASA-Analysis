@@ -12,7 +12,7 @@ import sasa_ext
 from ovito.io import import_file
 from ovito.data import NearestNeighborFinder
 
-from sasa_lammps.constants import SAS_SEED, SASA_XYZ
+from sasa_lammps.constants import SAS_SEED, FN_SASA_XYZ
 from sasa_lammps.utils import parse_xyz_file
 
 
@@ -192,7 +192,7 @@ def create_sasa_xyz(path, xyz_file, srad, samples):
 
     header = f"{len(export_points)}\n "
     np.savetxt(
-        Path(path) / SASA_XYZ,
+        Path(path) / FN_SASA_XYZ,
         export_points,
         header=header,
         comments="",

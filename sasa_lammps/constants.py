@@ -2,17 +2,17 @@
 KCAL_TO_EV = 0.04336  
 
 # File names
-IN_PRE = "in.pre"
-IN_TEMPLATE = "in.template"
-ELEM_LIBRARY = "element_library.txt"
-FF_PARAMS = "ff_params.dat"
-DUMP_COM = "dump_com.dat"
-SPEC = "spec.xyz"
-SASA_XYZ = "sasa.xyz"
-RESIDUE_LIST = "residuelist.txt"
-ETOT = "etot"
-TRAJ = "traj.lmp"
-THERMOLOG = "thermolog1"
+FN_IN_PRE = "in.pre"
+FN_IN_TEMPLATE = "in.template"
+FN_ELEM_LIBRARY = "element_library.txt"
+FN_FF_PARAMS = "ff_params.dat"
+FN_DUMP_COM = "dump_com.dat"
+FN_SPEC = "spec.xyz"
+FN_SASA_XYZ = "sasa.xyz"
+FN_RESIDUE_LIST = "residuelist.txt"
+FN_ETOT = "etot"
+FN_TRAJ = "traj.lmp"
+FN_THERMOLOG = "thermolog1"
 DATA_FILE = "data.macromol"
 
 # Fixed seed for reproducibility in the C extension

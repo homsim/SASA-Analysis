@@ -5,13 +5,13 @@ from pathlib import Path
 import numpy as np
 
 from sasa_lammps.constants import (
-    ETOT,
+    FN_ETOT,
     RADII_MAP,
-    TRAJ,
-    THERMOLOG,
-    SPEC,
-    IN_PRE,
-    IN_TEMPLATE
+    FN_TRAJ,
+    FN_THERMOLOG,
+    FN_SPEC,
+    FN_IN_PRE,
+    FN_IN_TEMPLATE
 )
 from sasa_lammps.resource_loader import resources
 
@@ -23,15 +23,15 @@ def check_files(path: str) -> None:
     """
     fs = os.listdir(path)
 
-    to_rm = [ETOT, TRAJ, THERMOLOG, SPEC]
+    to_rm = [FN_ETOT, FN_TRAJ, FN_THERMOLOG, FN_SPEC]
     for f in to_rm:
         if f in fs:
             print(f"{f} file already exists. Will be overwritten...")
             os.remove(Path(path) / f)
 
     # copy the LAMMPS input template to the working dir
-    shutil.copy(resources / IN_PRE, Path(path) / IN_PRE)
-    shutil.copy(resources / IN_TEMPLATE, Path(path) / IN_TEMPLATE)
+    shutil.copy(resources / FN_IN_PRE, Path(path) / FN_IN_PRE)
+    shutil.copy(resources / FN_IN_TEMPLATE, Path(path) / FN_IN_TEMPLATE)
 
     return 0
 
@@ -56,10 +56,10 @@ def count_atoms_in_mol(mol_file: str) -> int:
 
     return N
 
-
-def write_params_file(string: str, file_name: str) -> None:
+# method faulty. Needs a path
+def write_params_file(string: str, path: str, file_name: str) -> None:
     """Write string to a file. Needed to create the include files for LAMMPS to read"""
-    with open(file_name, "w") as f:
+    with open(Path(path) / file_name, "w") as f:
         f.write(f"{string}\n")
 
     return 0

@@ -2,12 +2,19 @@
 Pytest configuration and shared fixtures for SASA tests.
 """
 
+from unittest.mock import MagicMock, patch
 import pytest
+import shutil
 import numpy as np
 import json
 from pathlib import Path
 
 import sasa_ext
+from sasa_lammps.utils import read_last_two
+from sasa_lammps.constants import FN_ETOT, FN_SPEC
+
+
+resource_path = Path(__file__).parent / "resources" 
 
 
 @pytest.fixture
@@ -112,6 +119,63 @@ def tolerances():
         'geometric': 0.01            # 1% for geometric relationships
     }
 
+### TestMainAPI
+@pytest.fixture
+def prepare_api_test_files(tmp_path: Path):
+    """Creates a temporary test directory and deletes it after the test."""
+    temp_path = tmp_path / "api_test_lysozyme"
+    resource_path = Path(__file__).parent / "resources" 
+    required_files = [
+        "element_library.txt",
+        "h.mol",
+        "h2o2.mol",
+        "lysozyme_full.gro",
+        "lysozyme_part.gro",
+        "protein2013.ff"
+        ]
+    
+    temp_path.mkdir()
+    for f in required_files:
+        shutil.copyfile(resource_path / f, temp_path / f)
+    # copy relevant files from ./resources
+    
+    yield temp_path
+
+    # teardown: Delete the results
+    shutil.rmtree(temp_path)
+
+@pytest.fixture
+def write_file_for_api_test_mock():
+    """Writes files for API tests that in prod would be written by the mocked methods."""
+    def _write_file(*args, **kwargs):
+        path = kwargs["path"]
+        fn = kwargs["fn"]
+        return_type = kwargs["return_type"]
+        shutil.copyfile(resource_path / fn, path / fn)
+        if return_type == "tuple":
+            return read_last_two(path, FN_ETOT)
+        else:
+            return 0
+    return _write_file
+
+@pytest.fixture
+def mock_for_api_test():
+    """Creates mock for multiprocessing.Pool and sasa._pre_calc()."""
+    # simply mocking _run_lmp does not work. Raises a PicklingError as described here: https://github.com/python/cpython/issues/100090
+    # I guess I cannot fix this at the moment
+
+    with patch("sasa_lammps.sasa_main.multiprocessing.Pool") as mock_pool, \
+        patch("sasa_lammps.sasa_main.Sasa._pre_calc") as mock_pre_calc:
+
+        mock_pool_instance = MagicMock()
+        mock_pool.return_value.__enter__.return_value = mock_pool_instance
+
+        mock_pool_instance = mock_pool_instance
+        mock_pre_calc = mock_pre_calc
+
+        yield {"mock_pool_instance": mock_pool_instance, "mock_pre_calc": mock_pre_calc}
+
+### helper
 def create_xyz_file(tmp_path, filename, atoms):
     """Create an XYZ file from atom data.
 

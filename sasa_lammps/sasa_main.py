@@ -14,7 +14,7 @@ import numpy as np
 import tqdm
 import signal
 
-from multiprocessing import Pool
+import multiprocessing
 
 from sasa_lammps.sasa_core import (
     create_sasa_xyz,
@@ -43,12 +43,13 @@ from sasa_lammps.postprocessing import (
     atom_analysis_plot
 )
 from sasa_lammps.constants import (
-    FF_PARAMS,
-    DUMP_COM,
-    SPEC,
-    RESIDUE_LIST,
-    IN_PRE,
-    IN_TEMPLATE,
+    FN_ETOT,
+    FN_FF_PARAMS,
+    FN_DUMP_COM,
+    FN_SPEC,
+    FN_RESIDUE_LIST,
+    FN_IN_PRE,
+    FN_IN_TEMPLATE,
     DATA_FILE,
     KCAL_TO_EV
 )
@@ -148,13 +149,13 @@ class Sasa:
         # provide methods to load result data, such that a postprocessing can be performed without running the computation
 
         # atom analysis
-        neighbor = neighbor_analysis(self.path, SPEC, self.gro_file)
-        atom_analysis_result = atom_analysis(self.path, SPEC, neighbor)
+        neighbor = neighbor_analysis(self.path, FN_SPEC, self.gro_file)
+        atom_analysis_result = atom_analysis(self.path, FN_SPEC, neighbor)
         atom_analysis_plot(self.path, neighbor, atom_analysis_result)
 
         # residue analysis
         residuelist(self.path, self.gro_file)
-        residue_analysis_result = residue_analysis(self.path, SPEC, RESIDUE_LIST)
+        residue_analysis_result = residue_analysis(self.path, FN_SPEC, FN_RESIDUE_LIST)
         residue_analysis_plot(self.path, residue_analysis_result)
 
         # one could add a config-method to define more details about the postprocessing
@@ -174,8 +175,8 @@ class Sasa:
         check_files(self.path)
 
         # write ff_str and dump_str to files for LAMMPS to read in
-        write_params_file(self.ff_str, FF_PARAMS)
-        write_params_file(self.dump_str, DUMP_COM)
+        write_params_file(self.ff_str, self.path, FN_FF_PARAMS)
+        write_params_file(self.dump_str, self.path, FN_DUMP_COM)
 
         # get the energies for the isolated macro- and probe molecule, respectively
         self.e_mol, self.e_prob = self._pre_calc()
@@ -208,12 +209,12 @@ class Sasa:
             Energy of the probe molecule in kcal/mole
         """
         self._run_lmp(
-            IN_PRE,
+            FN_IN_PRE,
             [0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0]
         )
 
-        e_mol, e_prob = read_last_two(self.path, "etot")
+        e_mol, e_prob = read_last_two(self.path, FN_ETOT)
 
         return e_mol, e_prob
 
@@ -237,7 +238,7 @@ class Sasa:
 
         # create final output file header and write to spec.xyz
         header = f"{self.n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
-        with open(Path(self.path) / SPEC, "w") as f:
+        with open(Path(self.path) / FN_SPEC, "w") as f:
             f.write(header)
 
         # rotate the probe molecule for n-atomic probes (n > 1)
@@ -253,14 +254,14 @@ class Sasa:
         # create iterable for multiprocessing.Pool.starmap()
         iters = [self.sasa_positions, self.neighbors["res"], self.rotations]
         run_iterable = [
-            [IN_TEMPLATE, pos, rot, atom_number, res, e_mol, e_prob]
+            [FN_IN_TEMPLATE, pos, rot, atom_number, res, e_mol, e_prob]
             for pos, res, rot in zip(*iters)
         ]
 
         # modify the SIGINT handler to exit Pool gently. For more infos see:
         # https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
         original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        with Pool(processes=self.n_procs) as pool:
+        with multiprocessing.Pool(processes=self.n_procs) as pool:
             signal.signal(signal.SIGINT, original_sigint_handler)
             try:
                 pool.starmap(
