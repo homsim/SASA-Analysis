@@ -43,24 +43,13 @@ pytest ./tests
 
 # Usage
 
-The package really only has one usable method `sasa_lammps.sasa()`:
+The package really only has one usable object `sasa_lammps.Sasa`:
 
 ```python
->>> from sasa_lammps import Sasa
+from sasa_lammps import Sasa
 ```
 
-```
->>> print(Sasa.__doc__)
-    Class to perform a computation of the SASA, as well as hold the information of its results.
-    Several files need to be provided in the construction of this object. Then, a computation can be performed with
-    ```
-    sasa.compute(*args)
-    ```
-    and a subsequent post-processing with
-    ´``
-    sasa.postprocess(*args)
-    ```
-```
+To see a list of usable methods, use `help(Sasa)` or see `docs/sasa_lammps.html`.
 
 ## Example
 
@@ -76,7 +65,7 @@ The following files need to be provided for LAMMPS:
 - protein2013.ff
 
 ```python
-from sasa_lammps import asa
+from sasa_lammps import Sasa
 
 # Import the gromacs file
 gro_file = "lysozyme_part.gro"
