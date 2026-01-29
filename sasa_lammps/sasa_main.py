@@ -8,6 +8,7 @@ initialization, which probably takes the most amount of computational time right
 """
 
 import os
+import shutil
 import subprocess
 from pathlib import Path
 import numpy as np
@@ -98,6 +99,10 @@ class Sasa:
         self.ff_str = ff_str
         self.dump_str = dump_str
         self.lammps_exe = lammps_exe if lammps_exe is not None else get_lammps_executable()
+        
+        if shutil.which(self.lammps_exe) is None:
+            raise RuntimeError("LAMMPS binary {} is not executable.".format(self.lammps_exe))
+
         self.data_file = DATA_FILE
         
     def compute(

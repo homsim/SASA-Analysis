@@ -50,8 +50,8 @@ class TestMainAPI:
         assert True # checks only that this runs without error
 
 
-    def test_api_lysozyme_explicit_exe(self, prepare_api_test_files, mock_for_api_test, write_file_for_api_test_mock):
-        """Test of Sasa.compute() with lysozyme and stating the LAMMPS exe explicitly."""
+    def test_api_lysozyme_invalid_exe(self, prepare_api_test_files, mock_for_api_test, write_file_for_api_test_mock):
+        """Test of Sasa.compute() with lysozyme and providing an invalid LAMMPS binary."""
         mock_for_api_test["mock_pool_instance"].starmap.side_effect = partial(
             write_file_for_api_test_mock,
             path = prepare_api_test_files,
@@ -66,17 +66,19 @@ class TestMainAPI:
             return_type="tuple"
         )
 
-        sasa = Sasa(
-            "lysozyme_part.gro",
-            "h.mol",
-            self.ff_str,
-            "",
-            "/some/path/to/a/hypothetical/lammps/exe"
-        )
-        
-        sasa.compute(path=prepare_api_test_files)
-        
-        assert True # checks only that this runs without error
+        with pytest.raises(RuntimeError):
+            sasa = Sasa(
+                "lysozyme_part.gro",
+                "h.mol",
+                self.ff_str,
+                "",
+                "/some/path/to/a/hypothetical/lammps/exe"
+            )
+            
+            sasa.compute(path=prepare_api_test_files)
+
+            
+        assert True # checks only that this runs with an error
 
     def test_api_lysozyme_sub_path(self, prepare_api_test_files, mock_for_api_test, write_file_for_api_test_mock):
         """Test of Sasa.compute() with lysozmye from another directory than the cwd."""
