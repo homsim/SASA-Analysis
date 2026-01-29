@@ -13,7 +13,7 @@ FN_RESIDUE_LIST = "residuelist.txt"
 FN_ETOT = "etot"
 FN_TRAJ = "traj.lmp"
 FN_THERMOLOG = "thermolog1"
-DATA_FILE = "data.macromol"
+FN_DATA_FILE = "data.macromol"
 
 # Fixed seed for reproducibility in the C extension
 SAS_SEED = 38572111

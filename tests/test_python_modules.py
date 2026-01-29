@@ -72,7 +72,7 @@ class TestSASACoreModule:
 
         # Call SASA function
         sasa_points = create_sasa_xyz(
-            str(tmp_path), "test.xyz", srad=1.4, samples=500
+            tmp_path, "test.xyz", srad=1.4, samples=500
         )
 
         # Check return value

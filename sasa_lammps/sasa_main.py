@@ -9,6 +9,7 @@ initialization, which probably takes the most amount of computational time right
 
 import os
 import shutil
+from typing import Union
 import subprocess
 from pathlib import Path
 import numpy as np
@@ -51,7 +52,7 @@ from sasa_lammps.constants import (
     FN_RESIDUE_LIST,
     FN_IN_PRE,
     FN_IN_TEMPLATE,
-    DATA_FILE,
+    FN_DATA_FILE,
     KCAL_TO_EV
 )
 
@@ -69,19 +70,19 @@ class Sasa:
     """
     def __init__(
         self,
-        gro_file: str,
-        mol_file: str,
+        gro_file: Union[str, Path],
+        mol_file: Union[str, Path],
         ff_str: str,
         dump_str: str,
-        lammps_exe: str = None,
+        lammps_exe: Union[str, Path, None] = None,
     ):
         """Constructor for the `Sasa` object.
 
         Parameters
         ----------
-        gro_file : str
+        gro_file : Union[str, Path]
             Name of the gromacs file of the macromolecule
-        mol_file : str
+        mol_file : Union[str, Path]
             Name of the LAMMPS mol file to use as probe of the SAS (solvent acessible surface)
         ff_str : str
             Force field parameters to provide to LAMMPS. See examples directory
@@ -91,26 +92,24 @@ class Sasa:
         dump_str : str
             Dump command to provide to LAMMPS. See examples directory
             https://docs.lammps.org/dump.html
-        lammps_exe : str,
+        lammps_exe : Union[str, Path, None],
             Path to the LAMMPS executable to be used. If None, an executable is downloaded. 
         """
-        self.gro_file = gro_file
-        self.mol_file = mol_file
+        self.gro_file = Path(gro_file)
+        self.mol_file = Path(mol_file)
         self.ff_str = ff_str
         self.dump_str = dump_str
-        self.lammps_exe = lammps_exe if lammps_exe is not None else get_lammps_executable()
+        self.lammps_exe = Path(lammps_exe) if lammps_exe is not None else get_lammps_executable()
         
         if shutil.which(self.lammps_exe) is None:
             raise RuntimeError("LAMMPS binary {} is not executable.".format(self.lammps_exe))
-
-        self.data_file = DATA_FILE
         
     def compute(
         self,
         n_procs: int = 1,
         srad: float = 1.4,
         samples: int = 100,
-        path: str = ".", # os.getcwd() ?
+        path: Union[str, Path] = Path(os.getcwd())
     ) -> None:
         """
         Compute the solvet accessible surface analysis.
@@ -135,7 +134,7 @@ class Sasa:
         self.n_procs = n_procs
         self.srad = srad
         self.samples = samples
-        self.path = path
+        self.path = Path(path)
         self.parent_pid = os.getpid()   # PID of the parent process: required in order to kill in case of an exception
 
         self._initialize()
@@ -150,8 +149,9 @@ class Sasa:
         Perform postprocessing on the results.
         """
         # Todo:
-        # add checks that all necessary files exist
-        # provide methods to load result data, such that a postprocessing can be performed without running the computation
+        # - add checks that all necessary files exist
+        # - provide methods to load result data, such that a postprocessing can be performed without running the computation
+        # - Convert arguments to pathlib.Path
 
         # atom analysis
         neighbor = neighbor_analysis(self.path, FN_SPEC, self.gro_file)
@@ -187,7 +187,7 @@ class Sasa:
         self.e_mol, self.e_prob = self._pre_calc()
 
         # convert data file
-        self.xyz_file = Converter(LammpsToXyzStrategy()).convert(self.path, DATA_FILE)
+        self.xyz_file = Converter(LammpsToXyzStrategy()).convert(self.path, FN_DATA_FILE)
 
         # create sasa position file
         self.sasa_positions = create_sasa_xyz(
@@ -197,7 +197,7 @@ class Sasa:
 
         # build neigbor list
         self.neighbors = neighbor_finder(
-            self.path, DATA_FILE, self.sasa_positions
+            self.path, FN_DATA_FILE, self.sasa_positions
         )
 
         return 0
@@ -239,7 +239,7 @@ class Sasa:
         None
         """
         # Count atoms in macro molecule
-        atom_number = count_atoms_in_macromol(Path(self.path) / DATA_FILE)
+        atom_number = count_atoms_in_macromol(Path(self.path) / FN_DATA_FILE)
 
         # create final output file header and write to spec.xyz
         header = f"{self.n_probes}\natom\tx\ty\tz\tres\tetot/eV\teint/eV\n"
@@ -249,7 +249,7 @@ class Sasa:
         # rotate the probe molecule for n-atomic probes (n > 1)
         if count_atoms_in_mol(Path(self.path) / self.mol_file) > 1:
             self.rotations = rotate_probe(
-                self.path, DATA_FILE, self.sasa_positions, self.neighbors
+                self.path, FN_DATA_FILE, self.sasa_positions, self.neighbors
             )
         else:
             self.rotations = np.zeros((self.n_probes, 4))
@@ -282,13 +282,13 @@ class Sasa:
 
     def _run_lmp(
         self,
-        in_file: str,
+        in_fn: str,
         pos: list[float, float, float],
         rot: list[float, float, float, float],
-        atom_number = 0,
-        res = 0,
-        e_mol = 0.0,
-        e_prob = 0.0,
+        atom_number: int = 0,
+        res: int = 0,
+        e_mol: float = 0.0,
+        e_prob: float = 0.0,
     ) -> None:
         """
         Run LAMMPS by running a subprocess. May not be the most elegant way,
@@ -298,7 +298,7 @@ class Sasa:
 
         Parameters
         ----------
-        in_file : str
+        in_fn : str
             Name of the LAMMPS input file
         pos : list
             x, y, z position list of the SAS positions
@@ -324,8 +324,8 @@ class Sasa:
         """
 
         cmd = f"""
-            mpirun -np 1 {self.lammps_exe} -in {in_file} \
-            -var DataFile {DATA_FILE} -var MolFile {self.mol_file} \
+            mpirun -np 1 {self.lammps_exe} -in {in_fn} \
+            -var DataFile {FN_DATA_FILE} -var MolFile {self.mol_file} \
             -var sasaX {pos[0]:.3f} -var sasaY {pos[1]:.3f} \
             -var sasaZ {pos[2]:.3f} -var rotAng {rot[0]:.3f} \
             -var rotVecX {rot[1]:.3f} -var rotVecY {rot[2]:.3f} \
@@ -341,7 +341,7 @@ class Sasa:
             )
         except subprocess.CalledProcessError as exc:
             print(exc.stdout.decode())
-            os.kill(self.parent_pid, signal.SIGINT)     # not the best method maybe. but its sufficient...
+            os.kill(self.parent_pid, signal.SIGINT)
         finally:
             pass
 

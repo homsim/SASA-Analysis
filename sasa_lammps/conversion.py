@@ -10,36 +10,36 @@ from ovito.modifiers import (
     ComputePropertyModifier
 )
 
-from sasa_lammps.constants import DATA_FILE, FN_ELEM_LIBRARY
+from sasa_lammps.constants import FN_DATA_FILE, FN_ELEM_LIBRARY
 
 
 class ConverterStrategy(ABC):
     @abstractmethod
-    def convert(self, path: str, in_file: str) -> str:
+    def convert(self, path: Path, in_fn: Path) -> str:
         """
-        Converts the `in_file` in `path` and returns the exported file name.
+        Converts the `in_fn` in `path` and returns the exported file path.
         Parameters
         ----------
-        path : str
-            Path where in_file resised and where the output is exported to.
-        in_file : str
+        path : Path
+            Path where in_fn resised and where the output is exported to.
+        in_fn : Path
             Name of the file to be converted
         Returns
         -------
         out_file : str
-            Path to the converted, exported file.
+            Name of the converted, exported file.
         """
         pass
 
 
 class GromacsToLammpsStrategy(ConverterStrategy):
     """Strategy implementation to convert Gromacs to LAMMPS files."""
-    def convert(self, path: str, in_file: str) -> str:
+    def convert(self, path: Path, in_fn: str) -> str:
         self.path = path
-        self.di = pd.read_csv(Path(self.path) / FN_ELEM_LIBRARY, sep='\s+')
+        self.di = pd.read_csv(self.path / FN_ELEM_LIBRARY, sep='\s+')
 
-        pipeline = import_file(Path(self.path) / in_file)
-        self._delete_solvent(in_file, pipeline)
+        pipeline = import_file(self.path / in_fn)
+        self._delete_solvent(in_fn, pipeline)
 
         pipeline.modifiers.append(self._change_particleTypes)
         pipeline.modifiers.append(self._change_particleIDs)
@@ -55,25 +55,25 @@ class GromacsToLammpsStrategy(ConverterStrategy):
 
         export_file(
             pipeline, 
-            Path(self.path) / DATA_FILE, 
+            self.path / FN_DATA_FILE, 
             "lammps/data",  
             atom_style="full")
 
-        return DATA_FILE
+        return FN_DATA_FILE
 
-    def _delete_solvent(self, in_file: str, pipeline: Pipeline) -> None:
+    def _delete_solvent(self, in_fn: str, pipeline: Pipeline) -> None:
         """
         Delete the solvent and ions from a dataset
         
         Parameters
         ----------
-        in_file: str
+        in_fn: str
             Path to the GROMACS data file
         pipeline: Pipeline
             Ovito pipeline object that acts on the dataset
         """
         # Find the place to cut
-        with open(Path(self.path) /in_file, "r") as rf:
+        with open(self.path / in_fn, "r") as rf:
             for i, line in enumerate(rf):
                 if 'SOL' in line or 'SOD' in line:
                     atmnr = i - 2
@@ -91,7 +91,7 @@ class GromacsToLammpsStrategy(ConverterStrategy):
     
     def _change_particleIDs(self, frame, data):
         """Change Particle IDs"""
-        for i,item in enumerate(self.di['gromacs_ParticleType']):
+        for i, item in enumerate(self.di['gromacs_ParticleType']):
             data.particles_.particle_types_.type_by_id_(item).id = i+1
     
     def _change_masses(self, frame, data):
@@ -103,15 +103,15 @@ class GromacsToLammpsStrategy(ConverterStrategy):
 
 class LammpsToXyzStrategy(ConverterStrategy):
     """Strategy implementation to convert LAMMPS to XYZ files."""
-    def convert(self, path, in_file):
-        pipeline = import_file(Path(path) / in_file)
+    def convert(self, path: Path, in_fn: str) -> str:
+        pipeline = import_file(path / in_fn)
 
-        ### temporary solution
-        xyz_file = f"{in_file.split('.')[-1]}.xyz"
+        ### temporary solution. Relies on convertions
+        xyz_fn = f"{in_fn.split('.')[-1]}.xyz"
 
         export_file(
             pipeline,
-            Path(path) / xyz_file,
+            path / xyz_fn,
             "xyz",
             columns=[
                 "Particle Type",
@@ -121,7 +121,7 @@ class LammpsToXyzStrategy(ConverterStrategy):
             ],
         )
 
-        return xyz_file
+        return xyz_fn
 
 
 class Converter:
@@ -134,14 +134,14 @@ class Converter:
         """Get the currently set strategy to convert."""
         return self._strategy
     
-    def convert(self, path: str, in_file: str) -> str:
+    def convert(self, path: Path, in_fn: str) -> str:
         """
-        Converts the `in_file` in `path` and returns the path to exported file.
+        Converts the `in_fn` in `path` and returns the path to exported file.
         Parameters
         ----------
-        path : str
-            Path where in_file resised and where the output is exported to.
-        in_file : str
+        path : Union[str, Path]
+            Path where in_fn resised and where the output is exported to.
+        in_fn : str
             Name of the file to be converted
         Returns
         -------
@@ -149,4 +149,4 @@ class Converter:
             Path to the converted, exported file.
         """
 
-        return self._strategy.convert(path, in_file)
+        return self._strategy.convert(path, in_fn)

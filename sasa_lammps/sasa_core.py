@@ -16,16 +16,16 @@ from sasa_lammps.constants import SAS_SEED, FN_SASA_XYZ
 from sasa_lammps.utils import parse_xyz_file
 
 
-def neighbor_finder(path, data_file, sasa_positions):
+def neighbor_finder(path: Path, data_fn: str, sasa_positions: np.array):
     """
     Compute informations on the nearest neighbors of every SAS point, i.e. which
     atom of the macromolecule is closest to the SAS point.
 
     Parameters
     ----------
-    path : str
+    path : Path
         Path to xyz_file and where to export files to
-    data_file: str
+    data_fn: str
         Name of the LAMMPS data file of the macromolecule
     sasa_positions : numpy.array
         Coordinates of the points on the SAS
@@ -41,7 +41,7 @@ def neighbor_finder(path, data_file, sasa_positions):
 
     """
 
-    pipeline = import_file(Path(path) / data_file)
+    pipeline = import_file(path / data_fn)
     data = pipeline.compute()
 
     finder = NearestNeighborFinder(1, data)  # 1st nearest neighbor
@@ -55,7 +55,7 @@ def neighbor_finder(path, data_file, sasa_positions):
 
     return neighbors
 
-def rotate_probe(path, data_file, sasa_positions, neighbors):
+def rotate_probe(path: Path, data_fn: str, sasa_positions: np.array, neighbors: dict):
     """
     Rotate the probe molecule on the SAS. Finds the nearest SAS point for each atom
     of the macromolecule. The rotation is then done with respect to the center-of-mass
@@ -63,9 +63,9 @@ def rotate_probe(path, data_file, sasa_positions, neighbors):
 
     Parameters
     ----------
-    path : str
+    path : Path
         Path to xyz_file and where to export files to
-    data_file: str
+    data_fn: str
         Name of the LAMMPS data file of the macromolecule
     sasa_positions : numpy.array
         Coordinates of the points on the SAS
@@ -82,7 +82,7 @@ def rotate_probe(path, data_file, sasa_positions, neighbors):
 
     """
 
-    pipeline = import_file(Path(path) / data_file)
+    pipeline = import_file(path / data_fn)
 
     # calculate the center-of-mass of the macromolecule
     data = pipeline.compute()
@@ -117,13 +117,13 @@ def rotate_probe(path, data_file, sasa_positions, neighbors):
 
     return rot_export
 
-def compute_sasa_from_xyz(xyz_file_path, srad=1.4, samples=500, points=True):
+def compute_sasa_from_xyz(xyz_file_path: Path, srad: float = 1.4, samples: int = 500, points: bool = True):
     """
     Compute SASA from XYZ file using Monte Carlo sampling.
 
     Parameters
     ----------
-    xyz_file_path : str
+    xyz_file_path : Path
         Path to XYZ coordinate file
     srad : float
         Probe radius (solvent radius)
@@ -157,7 +157,7 @@ def compute_sasa_from_xyz(xyz_file_path, srad=1.4, samples=500, points=True):
     else:
         return total_sasa, None
 
-def create_sasa_xyz(path, xyz_file, srad, samples):
+def create_sasa_xyz(path: Path, xyz_file: str, srad: float, samples: int):
     """
     Create van der Waals surface points for molecular analysis.
 
@@ -178,7 +178,7 @@ def create_sasa_xyz(path, xyz_file, srad, samples):
         (N, 3) Array of coordinates on the SAS.
         N is loosely determined by 'samples' argument.
     """
-    xyz_file_path = Path(path) / xyz_file
+    xyz_file_path = path / xyz_file
 
     # Compute SASA surface points
     _, sasa_points = compute_sasa_from_xyz(xyz_file_path, srad=srad, samples=samples, points=True)
@@ -192,7 +192,7 @@ def create_sasa_xyz(path, xyz_file, srad, samples):
 
     header = f"{len(export_points)}\n "
     np.savetxt(
-        Path(path) / FN_SASA_XYZ,
+        path / FN_SASA_XYZ,
         export_points,
         header=header,
         comments="",

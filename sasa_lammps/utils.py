@@ -16,7 +16,7 @@ from sasa_lammps.constants import (
 from sasa_lammps.resource_loader import resources
 
 
-def check_files(path: str) -> None:
+def check_files(path: Path) -> None:
     """
     Check if all the relevant files are present to exec LAMMPS
     and copy LAMMPS input file templates.
@@ -27,16 +27,16 @@ def check_files(path: str) -> None:
     for f in to_rm:
         if f in fs:
             print(f"{f} file already exists. Will be overwritten...")
-            os.remove(Path(path) / f)
+            os.remove(path / f)
 
     # copy the LAMMPS input template to the working dir
-    shutil.copy(resources / FN_IN_PRE, Path(path) / FN_IN_PRE)
-    shutil.copy(resources / FN_IN_TEMPLATE, Path(path) / FN_IN_TEMPLATE)
+    shutil.copy(resources / FN_IN_PRE, path / FN_IN_PRE)
+    shutil.copy(resources / FN_IN_TEMPLATE, path / FN_IN_TEMPLATE)
 
     return 0
 
 
-def count_atoms_in_macromol(data_file: str) -> int:
+def count_atoms_in_macromol(data_file: Path) -> int:
     """Count number of atoms in macro molecule file"""
     with open(data_file, "r") as f:
         for line in f:
@@ -46,7 +46,7 @@ def count_atoms_in_macromol(data_file: str) -> int:
 
     return atom_number
 
-def count_atoms_in_mol(mol_file: str) -> int:
+def count_atoms_in_mol(mol_file: Path) -> int:
     """Count number of atoms in molecule file"""
     with open(mol_file, "r") as f:
         for line in f:
@@ -57,17 +57,17 @@ def count_atoms_in_mol(mol_file: str) -> int:
     return N
 
 # method faulty. Needs a path
-def write_params_file(string: str, path: str, file_name: str) -> None:
+def write_params_file(string: str, path: Path, fn: str) -> None:
     """Write string to a file. Needed to create the include files for LAMMPS to read"""
-    with open(Path(path) / file_name, "w") as f:
+    with open(path / fn, "w") as f:
         f.write(f"{string}\n")
 
     return 0
 
 
-def read_last_two(path: str, file_name: str) -> list[float, float]:
+def read_last_two(path: Path, fn: str) -> list[float, float]:
     """Read last to lines of file, convert to float and return the read values"""
-    with open(Path(path) / file_name, "r") as f:
+    with open(path / fn, "r") as f:
         lines = f.readlines()[-2:]
     l1 = float(lines[0])
     l2 = float(lines[1])
@@ -75,7 +75,7 @@ def read_last_two(path: str, file_name: str) -> list[float, float]:
     return l1, l2
 
 
-def _get_vdw_radius(element):
+def _get_vdw_radius(element: str) -> float:
     """
     Get VdW radius for element (in Angstroms).
 
@@ -106,13 +106,13 @@ def _get_vdw_radius(element):
     return RADII_MAP.get(clean_element, 1.70)  # Default to carbon radius
 
 
-def parse_xyz_file(xyz_file_path):
+def parse_xyz_file(xyz_file_path: Path):
     """
     Parse XYZ file to extract coordinates and atom types.
 
     Parameters
     ----------
-    xyz_file_path : str
+    xyz_file_path : Path
         Path to the XYZ file
 
     Returns

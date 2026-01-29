@@ -15,7 +15,7 @@ class LammpsManager:
     LAMMPS_URL = "https://download.lammps.org/static/lammps-linux-x86_64-latest.tar.gz"
 
     @staticmethod
-    def _get_cache_dir():
+    def _get_cache_dir() -> Path:
         """Get the cache directory following XDG Base Directory Specification."""
         cache_home = os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")
         return Path(cache_home) / "sasa_lammps"
@@ -25,7 +25,7 @@ class LammpsManager:
         self.lammps_exe = None
         self._setup_lammps()
 
-    def _setup_lammps(self):
+    def _setup_lammps(self) -> None:
         """Download and setup LAMMPS binary if not already available."""
         lammps_path = Path(self.cache_dir) / "lammps-static" / "bin" / "lmp"
         
@@ -43,7 +43,7 @@ class LammpsManager:
         else:
             raise RuntimeError(f"LAMMPS binary not found at {lammps_path} after extraction")
 
-    def _download_and_extract_lammps(self):
+    def _download_and_extract_lammps(self) -> None:
         """Download and extract LAMMPS tarball."""
         # Create cache directory
         os.makedirs(self.cache_dir, exist_ok=True)
@@ -70,20 +70,20 @@ class LammpsManager:
         except Exception as e:
             raise RuntimeError(f"Failed to download or extract LAMMPS binary: {e}")
 
-    def get_lammps_executable(self):
+    def get_lammps_executable(self) -> Path:
         """Return the path to the LAMMPS executable."""
         if self.lammps_exe is None:
             raise RuntimeError("LAMMPS executable not available")
         return self.lammps_exe
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Remove downloaded LAMMPS files to free up space."""
         if Path(self.cache_dir).exists():
             shutil.rmtree(self.cache_dir)
             print(f"Cleaned up LAMMPS files from {self.cache_dir}")
 
 
-def get_lammps_executable():
+def get_lammps_executable() -> Path:
     """
     Convenience function to get the LAMMPS executable path.
     Downloads and sets up LAMMPS automatically if needed.
