@@ -60,13 +60,22 @@ class Sasa:
     """
     Class to perform a computation of the SASA, as well as hold the information of its results.
     Several files need to be provided in the construction of this object. Then, a computation can be performed with
-    ```
-    sasa.compute(*args)
-    ```
-    and a subsequent post-processing with
-    ´``
-    sasa.postprocess(*args)
-    ```
+    `Sasa.compute(*args)` and a subsequent post-processing with `Sasa.postprocess(*args)`.
+        
+    gro_file : Union[str, Path]
+        Name of the gromacs file of the macromolecule
+    mol_file : Union[str, Path]
+        Name of the LAMMPS mol file to use as probe of the SAS (solvent acessible surface)
+    ff_str : str
+        Force field parameters to provide to LAMMPS. See examples directory.
+        Care must be taken because currently the 'unit real' in the in.template basically restricts to only use pair_style reaxff.
+        https://docs.lammps.org/pair_style.html, https://docs.lammps.org/pair_coeff.html
+    dump_str : str
+        Dump command to provide to LAMMPS. See examples directory.
+        https://docs.lammps.org/dump.html
+    lammps_exe : Union[str, Path, None],
+        Path to the LAMMPS executable to be used. If None, an executable is downloaded. 
+
     """
     def __init__(
         self,
@@ -76,25 +85,7 @@ class Sasa:
         dump_str: str,
         lammps_exe: Union[str, Path, None] = None,
     ):
-        """Constructor for the `Sasa` object.
-
-        Parameters
-        ----------
-        gro_file : Union[str, Path]
-            Name of the gromacs file of the macromolecule
-        mol_file : Union[str, Path]
-            Name of the LAMMPS mol file to use as probe of the SAS (solvent acessible surface)
-        ff_str : str
-            Force field parameters to provide to LAMMPS. See examples directory
-            https://docs.lammps.org/pair_style.html
-            https://docs.lammps.org/pair_coeff.html
-            Care must be taken because currently the 'unit real' in the in.template basically restricts to only use pair_style reaxff.
-        dump_str : str
-            Dump command to provide to LAMMPS. See examples directory
-            https://docs.lammps.org/dump.html
-        lammps_exe : Union[str, Path, None],
-            Path to the LAMMPS executable to be used. If None, an executable is downloaded. 
-        """
+        """Constructor for the `Sasa` object."""
         self.gro_file = Path(gro_file)
         self.mol_file = Path(mol_file)
         self.ff_str = ff_str

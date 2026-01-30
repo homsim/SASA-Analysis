@@ -28,17 +28,12 @@ From this projects root directory install the package with all dependencies
 pip install .
 ```
 
-## Verification
+## Build the documentation (sphinx)
 
-After installation, you can either verify that the SASA extension is loaded correctly (tp not confuse python with the local `sasa_ext` directory, execute this from any other than the source-file directory):
+Navigate to the `docs` directory and execute use the make-script, e.g.
 ```bash
-cd && python -c "import sasa_ext; print('✓ SASA extension loaded successfully')"
-```
-
-or/and execute the tests in the `tests` directory. This requires the installation of the test-requirements and the install in editable mode:
-```bash
-pip install -e ".[test]"
-pytest ./tests
+cd docs 
+make html
 ```
 
 # Usage
@@ -49,7 +44,7 @@ The package really only has one usable object `sasa_lammps.Sasa`:
 from sasa_lammps import Sasa
 ```
 
-To see a list of usable methods, use `help(Sasa)` or see `docs/sasa_lammps.html`.
+To see a list of usable methods, use `help(Sasa)` or take a look at the documentation.
 
 ## Example
 
