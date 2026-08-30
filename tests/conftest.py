@@ -9,9 +9,20 @@ import numpy as np
 import json
 from pathlib import Path
 
+# Mock ovito imports to avoid libGLX.so.0 dependency
+import sys
+sys.modules['ovito'] = MagicMock()
+sys.modules['ovito.io'] = MagicMock()
+sys.modules['ovito.data'] = MagicMock()
+sys.modules['ovito.pipeline'] = MagicMock()
+sys.modules['ovito.modifiers'] = MagicMock()
+sys.modules['ovito.plugins'] = MagicMock()
+
 import sasa_ext
 from sasa_lammps.utils import read_last_two
 from sasa_lammps.constants import FN_ETOT, FN_SPEC
+from sasa_lammps.sasa_core import create_sasa_xyz, neighbor_finder
+from sasa_lammps.conversion import Converter, LammpsToXyzStrategy, GromacsToLammpsStrategy
 
 
 resource_path = Path(__file__).parent / "resources" 
